@@ -1,11 +1,10 @@
 mod common;
-mod image_to_ascii;
 mod setting;
 mod utils;
 
-use image_to_ascii::img_to_ascii;
 use setting::Settings;
 use std::env;
+use utils::image_to_ascii::img_to_ascii;
 
 fn main() {
     let mut args = env::args();
