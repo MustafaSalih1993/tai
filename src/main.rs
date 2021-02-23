@@ -1,63 +1,44 @@
-use image;
-use image::GenericImageView;
-use std::env;
-
+mod common;
+mod image_to_ascii;
 mod setting;
+mod utils;
+
+use image_to_ascii::img_to_ascii;
 use setting::Settings;
+use std::env;
 
 fn main() {
     let mut args = env::args();
-    // TODO: This is ugly FIXME
     let settings = match Settings::new(&mut args) {
         Some(val) => val,
         None => return,
     };
 
-    uncolored_img_to_ascii(settings);
+    img_to_ascii(settings);
 }
 
-fn uncolored_img_to_ascii(x: Settings) {
-    let img = if let Ok(val) = image::open(x.image_file) {
-        val
-    } else {
-        return println!("Error: File Not Fount OR File Type Not Supported!");
-    };
+// TODO: MAKE THIS WORK
+#[allow(unused)]
+mod img_to_braille {
+    use super::*;
+    use common::*;
 
-    //converting the image to greyscale
-    let img = img
-        .resize_exact(
-            (img.width() / x.image_size) as u32,
-            (img.height() / (x.image_size * 2) as u32) as u32,
-            image::imageops::FilterType::Nearest,
-        )
-        .grayscale();
-
-    //loop on every pixel in y and x of the image and calculate the brightness.
-    for y in 0..img.height() {
-        for x in 0..img.width() {
-            let [r, g, b, _] = img.get_pixel(x, y).0;
-            print_char(get_luminance(r, g, b));
-        }
-        println!();
+    pub fn to_braille(x: Settings) {
+        todo!()
     }
-    println!();
 }
 
-fn print_char(lumi: f32) {
-    // TODO: Move this to Settings module and accept a character array from the user.
-    let table = [
-        ' ', '.', ',', ':', ';', '\'', '"', '<', '>', 'i', '!', '(', ')', '[', ']', '(', ')', '{',
-        '}', '*', '8', 'B', '%', '$', '#', '@',
-    ];
-    print!("{}", table[(lumi * (table.len() - 1) as f32) as usize]);
-}
+// TODO: this will be a feature to show only 2 characters, will make the image to ONLY black and white
+//       by converting the the "grays" to black or white based on the scale.
 
-// luminance formula credits: https://stackoverflow.com/a/596243
-// >>> Luminance = 0.2126*R + 0.7152*G + 0.0722*B <<<
-// calculate RGB values to get brightness of the pixel
-fn get_luminance(r: u8, g: u8, b: u8) -> f32 {
-    let r = 0.2126 * (r as f32);
-    let g = 0.7152 * (g as f32);
-    let b = 0.0722 * (b as f32);
-    (r + g + b) / 255.0
+// source: https://en.wikipedia.org/wiki/Thresholding_(image_processing)
+#[allow(unused)]
+fn threshold_pixel(pixel: &mut [u8; 3], scale: u8) {
+    for i in 0..3 {
+        if pixel[i] < scale {
+            pixel[i] = 0;
+        } else {
+            pixel[i] = 255;
+        }
+    }
 }
