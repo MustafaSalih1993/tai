@@ -1,24 +1,31 @@
 use crate::common::get_greyscale_img;
 use crate::common::get_luminance;
-use crate::setting::Settings;
-use crate::utils::floyd_dither::floyd_dither;
+use crate::setting::{Settings, Style};
+use crate::utils::{floyd_dither::floyd_dither, image_to_onechar::img_to_onechar};
 
-pub fn img_to_ascii(x: Settings) {
-    let mut img = if let Some(val) = get_greyscale_img(x) {
+pub fn img_to_ascii(config: Settings) {
+    let mut img = if let Some(val) = get_greyscale_img(&config) {
         val
     } else {
         return println!("Error: File Not Fount OR File Type Not Supported!");
     };
 
-    // TODO: Move this table to Settings module as default, and accept a character array from the user.
-    let table = [
-        ' ', '.', ',', ':', ';', '\'', '"', '<', '>', 'i', '!', '(', ')', '[', ']', '(', ')', '{',
-        '}', '*', '8', 'B', '%', '$', '#', '@',
-    ];
+    // FIXME IM UGLY.
+    let table = match config.style {
+        Style::OneChar => {
+            img_to_onechar(config);
+            return;
+        }
+        Style::Ascii => vec![
+            ' ', '.', ',', ':', ';', '\'', '"', '<', '>', 'i', '!', '(', ')', '[', ']', '(', ')',
+            '{', '}', '*', '8', 'B', '%', '$', '#', '@',
+        ],
+        Style::Numbers => vec![' ', '2', '7', '4', '1', '3', '9', '8', '5', '6', '0'],
+        Style::Blocks => vec![' ', '░', '▒', '▓', '█'],
+    };
 
     //TODO: make this optional!
     floyd_dither(&mut img);
-
     // loop on every pixel in y and x of the image and calculate the luminance.
     for y in 0..img.height() {
         for x in 0..img.width() {

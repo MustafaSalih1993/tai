@@ -12,8 +12,8 @@ pub fn get_luminance(r: u8, g: u8, b: u8) -> f32 {
 }
 
 // this will resize the image and turn it into a greyscaled image(black, gray, and white);
-pub fn get_greyscale_img(config: Settings) -> Option<ImageBuffer<image::Rgb<u8>, Vec<u8>>> {
-    let img = if let Ok(val) = image::open(config.image_file) {
+pub fn get_greyscale_img(config: &Settings) -> Option<ImageBuffer<image::Rgb<u8>, Vec<u8>>> {
+    let img = if let Ok(val) = image::open(&config.image_file) {
         val
     } else {
         return None;

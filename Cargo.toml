@@ -1,13 +1,13 @@
 [package]
 name = "tai"
-version = "0.0.0"
+version = "0.0.1"
 authors = ["Mustafa  <mustafasalih1991@gmail.com>"]
 edition = "2018"
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/MustafaSalih1993/tai"
 description = "tai (Terminal Ascii Image) tool to convert images to ascii"
-
+include = ["src/**/*", "README.md"]
 
 [dependencies]
 image = "0.23.13"
