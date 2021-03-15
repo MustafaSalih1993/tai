@@ -14,7 +14,7 @@ fn main() {
     // parse args and return a valid config with defaults
     let config = match Config::new(&mut args) {
         Some(val) => val,
-        None => return,
+        None => return eprintln!("Error: failed to parse config!"),
     };
     // matching the style givin.
     match config.style {

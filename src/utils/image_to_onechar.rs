@@ -22,7 +22,7 @@ pub fn img_to_onechar(config: Config) {
     println!();
 }
 // modify pixel values
-fn threshold_pixel(pixel: &mut [u8; 3], scale: u8) {
+fn threshold_pixel(pixel: &mut [u8; 4], scale: u8) {
     let mut scale = scale;
     for val in pixel.iter_mut().take(3) {
         if val < &mut scale {

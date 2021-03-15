@@ -1,7 +1,9 @@
+use std::{fs::File, thread::sleep, time::Duration};
+
 use crate::common::*;
 use crate::config::Config;
 use crate::utils::floyd_dither::floyd_dither;
-use image::{GenericImageView, ImageBuffer};
+use image::{gif::GifDecoder, AnimationDecoder, DynamicImage, GenericImageView, RgbaImage};
 
 pub fn img_to_braille(config: Config) {
     // checking the image file is valid,if so opening the image.
@@ -10,18 +12,81 @@ pub fn img_to_braille(config: Config) {
     } else {
         return eprintln!("Image path is not correct, OR image format is not supported!");
     };
+    // checking if its animated
+    if config.image_file.ends_with(".gif") {
+        print_animated_image(&config);
+    } else {
+        let width = ((img.width() / config.scale) / 2) as u32;
+        let height = ((img.height() / config.scale) / 4) as u32;
+        // resizing the image and converting it to "imagebuffer" that contains pixels with r,g,b values,
+        // NOTE its required to be mut buffer so the floyed_dither function can modify it;
+        let mut img = img
+            .resize(width, height, image::imageops::FilterType::Lanczos3)
+            .to_rgba8();
+        // checking if the user wants to dither the image, if so dither it
+        if config.dither {
+            floyd_dither(&mut img);
+        };
 
-    let width = ((img.width() / config.scale) / 2) as u32;
-    let height = ((img.height() / config.scale) / 4) as u32;
-    // resizing the image and converting it to "imagebuffer" that contains pixels with r,g,b values,
-    // NOTE its required to be mut buffer so the floyed_dither function can modify it;
-    let mut img = img
-        .resize(width, height, image::imageops::FilterType::Lanczos3)
-        .to_rgb8();
-    // checking if the user wants to dither the image, if so dither it
-    if config.dither {
-        floyd_dither(&mut img);
+        print_static(&img, &config);
+    }
+}
+
+fn print_animated_image(config: &Config) {
+    let frames = get_frames(&config);
+    loop {
+        for frame in &frames {
+            print!("{}", frame);
+            sleep(Duration::from_millis(100))
+        }
+    }
+}
+
+fn get_frames(config: &Config) -> Vec<String> {
+    let mut out_frames = Vec::new();
+    let file_in = match File::open(&config.image_file) {
+        Ok(file) => file,
+        Err(_) => return out_frames,
     };
+    let decoder = GifDecoder::new(file_in).unwrap();
+    let frames = decoder
+        .into_frames()
+        .collect_frames()
+        .expect("error decoding gif");
+    // pushing this ansi code to clear the screen in the start of the frames
+    out_frames.push("\x1B[1J".to_string());
+
+    for frame in frames {
+        // prolly this is not efficient, need to read image crate docs more!
+        let img = DynamicImage::from(DynamicImage::ImageRgba8(frame.buffer().clone()));
+        let width = ((frame.buffer().width() / config.scale) / 2) as u32;
+        let height = ((frame.buffer().height() / config.scale) / 4) as u32;
+        let mut img = img
+            .resize(width, height, image::imageops::FilterType::Lanczos3)
+            .to_rgba8();
+        if config.dither {
+            floyd_dither(&mut img);
+        }
+        let translated_frame = translate_frame(&img, &config);
+        // this ansi code will seek/save the cursor position to the start of the art
+        // so for each frame will override the old one in stdout
+        out_frames.push(format!("\x1B[r{}", translated_frame));
+    }
+    out_frames
+}
+
+fn translate_frame(img: &RgbaImage, config: &Config) -> String {
+    let mut out = String::new();
+    for y in (0..img.height() - 4).step_by(4) {
+        for x in (0..img.width() - 2).step_by(2) {
+            let mut map = get_block_signals(config.threshold, &img, x, y);
+            out.push_str(&format!("{}", translate(&mut map)));
+        }
+        out.push('\n');
+    }
+    out
+}
+fn print_static(img: &RgbaImage, config: &Config) {
     for y in (0..img.height() - 4).step_by(4) {
         for x in (0..img.width() - 2).step_by(2) {
             let mut map = get_block_signals(config.threshold, &img, x, y);
@@ -34,16 +99,11 @@ pub fn img_to_braille(config: Config) {
 // taking a threshold value, image buffer, and origin pixel coordinates(x,y);
 // will calculate the pixels from the origin pixel(the x,y is the pixel coordinates) and
 // return a block of signals for everypixel.
-fn get_block_signals(
-    threshold: u8,
-    img: &ImageBuffer<image::Rgb<u8>, Vec<u8>>,
-    coord_x: u32,
-    coord_y: u32,
-) -> [[u8; 2]; 4] {
+fn get_block_signals(threshold: u8, img: &RgbaImage, coord_x: u32, coord_y: u32) -> [[u8; 2]; 4] {
     let mut pixel_map = [[0u8; 2]; 4];
     for iy in 0..4 {
         for ix in 0..2 {
-            let [red, green, blue] = img.get_pixel(coord_x + ix, coord_y + iy).0;
+            let [red, green, blue, _] = img.get_pixel(coord_x + ix, coord_y + iy).0;
             pixel_map[(iy) as usize][(ix) as usize] =
                 if get_luminance(red, green, blue) > threshold as f32 {
                     1

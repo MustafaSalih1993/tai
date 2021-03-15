@@ -19,7 +19,7 @@ pub fn img_to_ascii(config: Config, table: &[char]) {
     for y in 0..img.height() {
         for x in 0..img.width() {
             let pixel = img.get_pixel(x, y);
-            let [r, g, b] = pixel.0;
+            let [r, g, b, _] = pixel.0;
             select_char(&table, get_luminance(r, g, b));
         }
         println!();

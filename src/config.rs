@@ -132,6 +132,6 @@ fn check_style_arg(arg: &str) -> Style {
         "braille" => Style::Braille,
         "numbers" => Style::Numbers,
         "onechar" => Style::OneChar,
-        _ => Style::Braille, //this is just for the compiler to stop complaining
+        _ => Style::Braille,
     }
 }
