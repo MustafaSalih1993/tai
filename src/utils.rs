@@ -11,48 +11,52 @@ pub fn get_luminance(r: u8, g: u8, b: u8) -> f32 {
     r + g + b
 }
 
+// colorize a character
+pub fn colorize(rgb: &[u8; 3], ch: char) -> String {
+    let prefix = format!("\x1B[38;2;{};{};{}m", rgb[0], rgb[1], rgb[2]);
+    let postfix = "\x1B[0m";
+    format!("{}{}{}", prefix, ch, postfix)
+}
+
 // this will open the image path,
-// and resize the image and turn it into a greyscaled image(black, gray, and white);
-pub fn greyscaled(config: &Config) -> Option<RgbaImage> {
+// and resize the image and turn it into image buffer;
+pub fn process_image(config: &Config) -> Option<RgbaImage> {
     // checking if the image path is valid
     let img = match image::open(&config.image_file) {
         Ok(val) => val,
         Err(_) => {
-            eprintln!("common.greyscaled: Failed to open the image path!");
+            eprintln!("common.: Failed to open the image path!");
             return None;
         }
     };
-    //  converting the image to greyscale and resizing it
-    // (the resizing here is sucks i figured out by testing, maybe
-    // i will change as soon as i fix the "image to ascii" algorithm!)
-    let img = img
-        .resize_exact(
-            (img.width() / config.scale) as u32,
-            (img.height() / (config.scale * 2) as u32) as u32,
-            image::imageops::FilterType::Nearest,
-        )
-        .grayscale()
-        .to_rgba8();
+    let img = img.resize_exact(
+        (img.width() / config.scale) as u32,
+        (img.height() / (config.scale * 2) as u32) as u32,
+        image::imageops::FilterType::Lanczos3,
+    );
+
+    let img = match config.colored {
+        false => img.grayscale().to_rgba8(),
+        true => img.to_rgba8(),
+    };
 
     Some(img)
 }
 
 // program help message
-pub fn print_usage(program_name: String) {
-    println!("USAGE: {} [OPTIONS] [IMAGE_FILE]", program_name);
+pub fn print_usage() {
+    println!("USAGE: tai [OPTIONS] [IMAGE_FILE]");
     println!();
     println!("OPTIONS: ");
     println!("\t -h | --help\t\t Show this help message");
     println!("\t -d | --dither\t\t enables image dithering");
     println!("\t -s | --scale\t\t Followed by a number to Resize the output (lower number means bigger output) default to 2");
     println!("\t -t | --threshold\t Followed by a number (between 1 255) to select the threshold value,\n\
-\t\t\t\t it controls black/white. default to 128, works only with \"onechar\" and \"braille\" styles");
+\t\t\t\t default to 128, works with \"onechar\" and \"braille\" styles");
     println!(
         "\t -S | --style\t\t Followed by one of: {{ascii, numbers, blocks, onechar, braille}}, default to \"braille\""
     );
-    println!("\t      --onechar\t\t Followed by a character, This will modify the default character used by (-S onechar)");
-    println!(
-        "\t -v | --version\t\t Print {}'s Version and exit!.",
-        program_name
-    );
+    println!("\t      --onechar\t\t Followed by a character, This will modify the default character used by (-S onechar)\n");
+    println!("\t      --colored\t\t Will return true colored(RGB) art ");
+    println!("\t -v | --version\t\t Print tai's Version and exit!.");
 }

@@ -1,5 +1,5 @@
 // TODO: Better argument parsing, maybe will use a library if arguments will become too much.
-use crate::common::print_usage;
+use crate::utils::print_usage;
 const VERSION: &str = "0.0.2"; // program version
 
 #[derive(Debug)]
@@ -9,8 +9,6 @@ pub enum Style {
     Blocks,
     OneChar,
     Braille,
-    // TODO:
-    // Colored,
 }
 
 #[derive(Debug)]
@@ -21,15 +19,17 @@ pub struct Config {
     pub threshold: u8,
     pub style: Style,
     pub onechar: char,
+    pub colored: bool,
 }
 impl Config {
     // FIXME IM UGLY
     // Parsing arguments and return a valid config
     pub fn new(args: &mut std::env::Args) -> Option<Self> {
-        let program_name = args.next().unwrap();
+        args.next().unwrap();
         // defaults
         let image_file: String;
         let mut dither: bool = false;
+        let mut colored: bool = false;
         let mut onechar: char = '█';
         let mut scale: u32 = 2;
         let mut style: Style = Style::Braille;
@@ -46,27 +46,34 @@ impl Config {
             match args[_i].as_str() {
                 "-h" | "--help" => {
                     // show help.
-                    print_usage(program_name);
+                    print_usage();
                     return None;
                 }
                 "-v" | "--version" => {
                     // print program name and version and exit
-                    println!("{}-v{}", program_name, VERSION);
+                    println!("tai-v{}", VERSION);
                     return None;
                 }
                 "-d" | "--dither" => {
                     // modify the character when using the (--style onechar) flag;
                     if _i == args.len() - 1 {
-                        print_usage(program_name);
+                        print_usage();
                         return None;
                     };
                     dither = true;
                     _i += 1
                 }
+                "--colored" => {
+                    if _i == args.len() - 1 {
+                        print_usage();
+                        return None;
+                    };
+                    colored = true;
+                }
                 "--onechar" => {
                     // modify the character when using the (--style onechar) flag;
                     if _i == args.len() - 1 {
-                        print_usage(program_name);
+                        print_usage();
                         return None;
                     };
                     onechar = args[_i + 1].chars().next().unwrap();
@@ -75,7 +82,7 @@ impl Config {
                 "-S" | "--style" => {
                     // art style
                     if _i == args.len() - 1 {
-                        print_usage(program_name);
+                        print_usage();
                         return None;
                     };
                     style = check_style_arg(&args[_i + 1]);
@@ -84,7 +91,7 @@ impl Config {
                 "-t" | "--threshold" => {
                     // size/scale
                     if _i == args.len() - 1 {
-                        print_usage(program_name);
+                        print_usage();
                         return None;
                     };
                     threshold = args[_i + 1].parse().unwrap_or(threshold);
@@ -94,7 +101,7 @@ impl Config {
                 "-s" | "--scale" => {
                     // size/scale
                     if _i == args.len() - 1 {
-                        print_usage(program_name);
+                        print_usage();
                         return None;
                     };
                     scale = args[_i + 1].parse().unwrap_or(scale);
@@ -117,6 +124,7 @@ impl Config {
         Some(Self {
             image_file,
             scale,
+            colored,
             dither,
             threshold,
             style,

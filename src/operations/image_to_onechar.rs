@@ -1,12 +1,12 @@
-use crate::common::{get_luminance, greyscaled};
 use crate::config::Config;
+use crate::utils::{get_luminance, process_image};
 
 //  will make the image to ONLY black and white
 //  by converting the the "grays" to black or white based on the scale.
 // source: https://en.wikipedia.org/wiki/Thresholding_(image_processing)
 
 pub fn img_to_onechar(config: Config) {
-    let mut img = greyscaled(&config).unwrap();
+    let mut img = process_image(&config).unwrap();
     for y in 0..img.height() {
         for x in 0..img.width() {
             let mut pixel = img.get_pixel_mut(x, y).0;

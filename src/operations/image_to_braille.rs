@@ -1,29 +1,29 @@
 use std::{fs::File, thread::sleep, time::Duration};
 
-use crate::common::*;
 use crate::config::Config;
-use crate::utils::floyd_dither::floyd_dither;
+use crate::operations::floyd_dither::floyd_dither;
+use crate::utils::*;
 use image::{gif::GifDecoder, AnimationDecoder, DynamicImage, GenericImageView, RgbaImage};
 
 pub fn img_to_braille(config: Config) {
-    // checking the image file is valid,if so opening the image.
-    let img = if let Ok(image) = image::open(&config.image_file) {
-        image
-    } else {
-        return eprintln!("Image path is not correct, OR image format is not supported!");
-    };
     // checking if its animated
     if config.image_file.ends_with(".gif") {
         print_animated_image(&config);
     } else {
+        // checking the image file is valid,if so opening the image.
+        let img = if let Ok(image) = image::open(&config.image_file) {
+            image
+        } else {
+            return eprintln!("Image path is not correct, OR image format is not supported!");
+        };
         let width = ((img.width() / config.scale) / 2) as u32;
         let height = ((img.height() / config.scale) / 4) as u32;
-        // resizing the image and converting it to "imagebuffer" that contains pixels with r,g,b values,
+        // resizing the image and converting it to "imagebuffer",
         // NOTE its required to be mut buffer so the floyed_dither function can modify it;
         let mut img = img
             .resize(width, height, image::imageops::FilterType::Lanczos3)
             .to_rgba8();
-        // checking if the user wants to dither the image, if so dither it
+        // checking if the user wants to dither the image.
         if config.dither {
             floyd_dither(&mut img);
         };
@@ -33,7 +33,7 @@ pub fn img_to_braille(config: Config) {
 }
 
 fn print_animated_image(config: &Config) {
-    let frames = get_frames(&config);
+    let frames = get_animated_frames(&config);
     loop {
         for frame in &frames {
             print!("{}", frame);
@@ -42,7 +42,7 @@ fn print_animated_image(config: &Config) {
     }
 }
 
-fn get_frames(config: &Config) -> Vec<String> {
+fn get_animated_frames(config: &Config) -> Vec<String> {
     let mut out_frames = Vec::new();
     let file_in = match File::open(&config.image_file) {
         Ok(file) => file,
@@ -80,7 +80,14 @@ fn translate_frame(img: &RgbaImage, config: &Config) -> String {
     for y in (0..img.height() - 4).step_by(4) {
         for x in (0..img.width() - 2).step_by(2) {
             let mut map = get_block_signals(config.threshold, &img, x, y);
-            out.push_str(&format!("{}", translate(&mut map)));
+            let ch = translate(&mut map);
+
+            if config.colored {
+                let [r, g, b, _] = img.get_pixel(x, y).0;
+                out.push_str(&colorize(&[r, g, b], ch));
+            } else {
+                out.push(ch);
+            }
         }
         out.push('\n');
     }
@@ -90,7 +97,13 @@ fn print_static(img: &RgbaImage, config: &Config) {
     for y in (0..img.height() - 4).step_by(4) {
         for x in (0..img.width() - 2).step_by(2) {
             let mut map = get_block_signals(config.threshold, &img, x, y);
-            print!("{}", translate(&mut map));
+            let ch = translate(&mut map);
+            if config.colored {
+                let [r, g, b, _] = img.get_pixel(x, y).0;
+                print!("{}", colorize(&[r, g, b], ch));
+            } else {
+                print!("{}", ch);
+            }
         }
         println!()
     }
