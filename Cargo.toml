@@ -8,7 +8,7 @@ readme = "README.md"
 repository = "https://github.com/MustafaSalih1993/tai"
 description = "tai (Terminal Ascii Image) tool to convert images to ascii"
 keywords = ["cli","graphics","terminal"]
-categories = ["command-line-utilities","Graphics"]
+categories = ["command-line-utilities","graphics"]
 include = ["src/**/*", "README.md"]
 
 
