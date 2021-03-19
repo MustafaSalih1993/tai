@@ -1,16 +1,16 @@
-use image::ImageBuffer;
+use image::RgbaImage;
 // TODO: make the "scale" dynamic by the user to control how many colors will be inside.
 // This algorithm to make a dithered image, it's error diff algorithm check the source below.
 // source : https://en.wikipedia.org/wiki/Floyd%E2%80%93Steinberg_dithering
 
-pub fn floyd_dither(img: &mut ImageBuffer<image::Rgb<u8>, Vec<u8>>) {
+pub fn floyd_dither(img: &mut RgbaImage) {
     // this will control the colors in the image(more value==more colors).
     let scale = 16.0;
 
     for y in 0..img.height() - 1 {
         for x in 1..img.width() - 1 {
-            let old_rgb: [u8; 3] = img.get_pixel(x, y).0;
-            let new_rgb: [u8; 3] = find_closest_color(old_rgb, scale);
+            let old_rgb: [u8; 4] = img.get_pixel(x, y).0;
+            let new_rgb: [u8; 4] = find_closest_color(old_rgb, scale);
 
             img.get_pixel_mut(x, y).0[..3].clone_from_slice(&new_rgb[..3]);
 
@@ -35,10 +35,10 @@ pub fn floyd_dither(img: &mut ImageBuffer<image::Rgb<u8>, Vec<u8>>) {
 // TODO: FIXME, IM UGLY you fucking asshole
 // this helper function will calculate the the neighbor pixel and add value from the error pixel as refrenced in wikipedia.
 fn calculate_and_assign_pixel(
-    img: &mut image::ImageBuffer<image::Rgb<u8>, Vec<u8>>, // imagebuffer
-    pixel_coord: (u32, u32),                               // coordinate (x,y)
-    err_pixel: [f32; 3],                                   // error pixel [R, G, B]
-    val: f32,                                              // value will be added to the calculation
+    img: &mut RgbaImage,     // imagebuffer
+    pixel_coord: (u32, u32), // coordinate (x,y)
+    err_pixel: [f32; 3],     // error pixel [R, G, B]
+    val: f32,                // value will be added to the calculation
 ) {
     // R
     img.get_pixel_mut(pixel_coord.0, pixel_coord.1).0[0] =
@@ -52,10 +52,11 @@ fn calculate_and_assign_pixel(
 }
 
 // this helper function to calculate the rgb values for the floyed dither algorithm.
-fn find_closest_color(pixel: [u8; 3], factor: f32) -> [u8; 3] {
+fn find_closest_color(pixel: [u8; 4], factor: f32) -> [u8; 4] {
     [
         ((factor * pixel[0] as f32 / 255.0).ceil() * (255.0 / factor)) as u8,
         ((factor * pixel[1] as f32 / 255.0).ceil() * (255.0 / factor)) as u8,
         ((factor * pixel[2] as f32 / 255.0).ceil() * (255.0 / factor)) as u8,
+        pixel[3],
     ]
 }

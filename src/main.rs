@@ -1,13 +1,13 @@
-mod common;
 mod config;
+mod operations;
 mod utils;
 
-use config::{Config, Style};
-use std::env;
-use utils::{
+use config::config::{Config, Style};
+use operations::{
     image_to_ascii::img_to_ascii, image_to_braille::img_to_braille,
     image_to_onechar::img_to_onechar,
 };
+use std::env;
 
 fn main() {
     let mut args = env::args();
@@ -16,14 +16,12 @@ fn main() {
         Some(val) => val,
         None => return,
     };
-    // matching the style givin.
+    // matching the style givin to decide which operation to apply.
     match config.style {
         Style::OneChar => {
-            // only onchar based art, dont require a char table.
             img_to_onechar(config);
         }
         Style::Braille => {
-            // this one generates characters internaly, doesnt require a char table.
             img_to_braille(config);
         }
         Style::Ascii => {
