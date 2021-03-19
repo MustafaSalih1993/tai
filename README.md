@@ -2,9 +2,9 @@
 Terminal Ascii Image
 
 A tool to convert images to ascii art written in **Rust** 🦀
-<!-- https://imgpile.com/i/7kcezl -->
+
 <p>
-<img width="720px" align="center" src="https://imgpile.com/images/7kcezl.gif"/>
+<img width="720px" align="center" src="./screenshots/1.gif"/>
 </p><br/>
 
 
