@@ -1,4 +1,4 @@
-use crate::config::Config;
+use crate::config::config::Config;
 use image::{GenericImageView, RgbaImage};
 
 // luminance formula credits: https://stackoverflow.com/a/596243
@@ -12,8 +12,8 @@ pub fn get_luminance(r: u8, g: u8, b: u8) -> f32 {
 }
 
 // colorize a character
-pub fn colorize(rgb: &[u8; 3], ch: char) -> String {
-    let prefix = format!("\x1B[38;2;{};{};{}m", rgb[0], rgb[1], rgb[2]);
+pub fn colorize(rgb: &[u8; 3], ch: char, bg_fg: u8) -> String {
+    let prefix = format!("\x1B[{};2;{};{};{}m", bg_fg, rgb[0], rgb[1], rgb[2]);
     let postfix = "\x1B[0m";
     format!("{}{}{}", prefix, ch, postfix)
 }
@@ -57,6 +57,8 @@ pub fn print_usage() {
         "\t -S | --style\t\t Followed by one of: {{ascii, numbers, blocks, onechar, braille}}, default to \"braille\""
     );
     println!("\t      --onechar\t\t Followed by a character, This will modify the default character used by (-S onechar)\n");
-    println!("\t      --colored\t\t Will return true colored(RGB) art ");
+    println!("\t      --colored\t\t Will return true colored(RGB) art. ");
+    println!("\t      --background\t Will apply the colors on the \"background\" of the characters instead of coloring the foreground.");
+    println!("\t      --sleep\t\t Followed by number, controls the sleep delay(milli seconds) between animation frames. default to 100");
     println!("\t -v | --version\t\t Print tai's Version and exit!.");
 }

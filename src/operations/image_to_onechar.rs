@@ -1,4 +1,4 @@
-use crate::config::Config;
+use crate::config::config::Config;
 use crate::utils::{get_luminance, process_image};
 
 //  will make the image to ONLY black and white

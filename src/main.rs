@@ -2,7 +2,7 @@ mod config;
 mod operations;
 mod utils;
 
-use config::{Config, Style};
+use config::config::{Config, Style};
 use operations::{
     image_to_ascii::img_to_ascii, image_to_braille::img_to_braille,
     image_to_onechar::img_to_onechar,
@@ -16,7 +16,7 @@ fn main() {
         Some(val) => val,
         None => return,
     };
-    // matching the style givin.
+    // matching the style givin to decide which operation to apply.
     match config.style {
         Style::OneChar => {
             img_to_onechar(config);

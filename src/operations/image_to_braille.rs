@@ -1,6 +1,6 @@
 use std::{fs::File, thread::sleep, time::Duration};
 
-use crate::config::Config;
+use crate::config::config::Config;
 use crate::operations::floyd_dither::floyd_dither;
 use crate::utils::*;
 use image::{gif::GifDecoder, AnimationDecoder, DynamicImage, GenericImageView, RgbaImage};
@@ -37,7 +37,7 @@ fn print_animated_image(config: &Config) {
     loop {
         for frame in &frames {
             print!("{}", frame);
-            sleep(Duration::from_millis(100))
+            sleep(Duration::from_millis(config.sleep))
         }
     }
 }
@@ -84,7 +84,7 @@ fn translate_frame(img: &RgbaImage, config: &Config) -> String {
 
             if config.colored {
                 let [r, g, b, _] = img.get_pixel(x, y).0;
-                out.push_str(&colorize(&[r, g, b], ch));
+                out.push_str(&colorize(&[r, g, b], ch, config.background));
             } else {
                 out.push(ch);
             }
@@ -100,7 +100,7 @@ fn print_static(img: &RgbaImage, config: &Config) {
             let ch = translate(&mut map);
             if config.colored {
                 let [r, g, b, _] = img.get_pixel(x, y).0;
-                print!("{}", colorize(&[r, g, b], ch));
+                print!("{}", colorize(&[r, g, b], ch, config.background));
             } else {
                 print!("{}", ch);
             }
