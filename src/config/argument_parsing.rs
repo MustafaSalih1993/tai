@@ -13,6 +13,7 @@ pub fn parse(args: Vec<String>) -> Option<Config> {
     let mut sleep: u64 = 100;
     let mut style: Style = Style::Braille;
     let mut threshold: u8 = 128;
+    let mut table: Vec<char> = vec![];
 
     if args.is_empty() {
         println!("try -h | --help option to show help!");
@@ -73,6 +74,7 @@ pub fn parse(args: Vec<String>) -> Option<Config> {
                     print_usage();
                     return None;
                 };
+
                 sleep = args[_i + 1].parse().unwrap_or(sleep);
                 _i += 1
             }
@@ -81,8 +83,14 @@ pub fn parse(args: Vec<String>) -> Option<Config> {
                     print_usage();
                     return None;
                 };
-                scale = args[_i + 1].parse().unwrap_or(scale);
-                _i += 1
+                let input = args[_i + 1].parse::<u32>();
+                scale = if input.is_err() || input.unwrap() < 1 {
+                    eprintln!("Error: invalid scale number using defaults!");
+                    scale
+                } else {
+                    args[_i + 1].parse().unwrap_or(scale)
+                };
+                _i += 1;
             }
             "-t" | "--threshold" => {
                 // threshold
@@ -91,6 +99,20 @@ pub fn parse(args: Vec<String>) -> Option<Config> {
                     return None;
                 };
                 threshold = args[_i + 1].parse().unwrap_or(threshold);
+                _i += 1
+            }
+            "--table" => {
+                // custom ascii table
+                if _i == args.len() - 1 {
+                    print_usage();
+                    return None;
+                };
+                table = args[_i + 1]
+                    .parse::<String>()
+                    .unwrap_or("".to_string())
+                    .split(',')
+                    .map(|token| token.trim().chars().next().unwrap_or(' '))
+                    .collect::<Vec<char>>();
                 _i += 1
             }
             "-v" | "--version" => {
@@ -122,6 +144,7 @@ pub fn parse(args: Vec<String>) -> Option<Config> {
         sleep,
         style,
         threshold,
+        table,
     })
 }
 
