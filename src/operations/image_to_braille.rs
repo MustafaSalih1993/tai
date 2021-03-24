@@ -32,6 +32,63 @@ pub fn img_to_braille(config: Config) {
     }
 }
 
+// taking a threshold value, image buffer, and origin pixel coordinates(x,y);
+// will calculate the pixels from the origin pixel(the x,y is the pixel coordinates) and
+// return a block of signals for everypixel.
+fn get_block_signals(threshold: u8, img: &RgbaImage, coord_x: u32, coord_y: u32) -> [[u8; 2]; 4] {
+    let mut pixel_map = [[0u8; 2]; 4];
+    for iy in 0..4 {
+        for ix in 0..2 {
+            let [red, green, blue, _] = img.get_pixel(coord_x + ix, coord_y + iy).0;
+            pixel_map[(iy) as usize][(ix) as usize] =
+                if get_luminance(red, green, blue) > threshold as f32 {
+                    1
+                } else {
+                    continue;
+                };
+        }
+    }
+    pixel_map
+}
+
+// this is the core parser function it will take a blocks of pixels converted to signals
+// (1 = raised pixel, 0 = unraised pixel), and then convert it to a binary and then to a valid char.
+fn translate(map: &mut [[u8; 2]; 4]) -> char {
+    /* our pixel block(map) look like this:
+      ---------
+      | 0 | 1 |
+      | 2 | 3 |
+      | 4 | 5 |
+      | 6 | 7 |
+      ---------
+    we want to convert it to this:
+      ---------
+      | 0 | 3 |
+      | 1 | 4 |
+      | 2 | 5 |
+      | 6 | 7 |
+      ---------
+    source: https://en.wikipedia.org/wiki/Braille_Patterns*/
+    // making a copy to to not mess up the indexes of the original pixel matrix.
+    let cloned = *map;
+    map[0][1] = cloned[1][1];
+    map[1][0] = cloned[0][1];
+    map[1][1] = cloned[2][0];
+    map[2][0] = cloned[1][0];
+    // converting to string
+    let mut tmp = String::new();
+    for i in map {
+        for j in i {
+            tmp.push_str(&j.to_string());
+        }
+    }
+    // reverse the "raised dots" to get a valid binary. (read wikipedia link above)
+    let tmp = tmp.chars().rev().collect::<String>();
+    // converting from base2 to integer
+    let c = (isize::from_str_radix(&tmp, 2).unwrap()) as u32;
+    std::char::from_u32(c + 0x2800).unwrap()
+}
+
 fn print_animated_image(config: &Config) {
     let frames = get_animated_frames(&config);
     loop {
@@ -107,60 +164,4 @@ fn print_static(img: &RgbaImage, config: &Config) {
         }
         println!()
     }
-}
-
-// taking a threshold value, image buffer, and origin pixel coordinates(x,y);
-// will calculate the pixels from the origin pixel(the x,y is the pixel coordinates) and
-// return a block of signals for everypixel.
-fn get_block_signals(threshold: u8, img: &RgbaImage, coord_x: u32, coord_y: u32) -> [[u8; 2]; 4] {
-    let mut pixel_map = [[0u8; 2]; 4];
-    for iy in 0..4 {
-        for ix in 0..2 {
-            let [red, green, blue, _] = img.get_pixel(coord_x + ix, coord_y + iy).0;
-            pixel_map[(iy) as usize][(ix) as usize] =
-                if get_luminance(red, green, blue) > threshold as f32 {
-                    1
-                } else {
-                    continue;
-                };
-        }
-    }
-    pixel_map
-}
-// this is the core function it will take a blocks of pixels converted to signals
-// (1 = raised pixel, 0 = unraised pixel), and then convert it to a binary and then to a valid char.
-fn translate(map: &mut [[u8; 2]; 4]) -> char {
-    /* our pixel block(map) look like this:
-      ---------
-      | 0 | 1 |
-      | 2 | 3 |
-      | 4 | 5 |
-      | 6 | 7 |
-      ---------
-    we want to convert it to this:
-      ---------
-      | 0 | 3 |
-      | 1 | 4 |
-      | 2 | 5 |
-      | 6 | 7 |
-      ---------
-    source: https://en.wikipedia.org/wiki/Braille_Patterns*/
-    // making a copy to to not mess up the indexes of the original pixel matrix.
-    let cloned = *map;
-    map[0][1] = cloned[1][1];
-    map[1][0] = cloned[0][1];
-    map[1][1] = cloned[2][0];
-    map[2][0] = cloned[1][0];
-    // converting to string
-    let mut tmp = String::new();
-    for i in map {
-        for j in i {
-            tmp.push_str(&j.to_string());
-        }
-    }
-    // reverse the "raised dots" to get a valid binary. (read wikipedia link above)
-    let tmp = tmp.chars().rev().collect::<String>();
-    // converting from base2 to integer
-    let c = (isize::from_str_radix(&tmp, 2).unwrap()) as u32;
-    std::char::from_u32(c + 0x2800).unwrap()
 }

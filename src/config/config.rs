@@ -21,6 +21,7 @@ pub struct Config {
     pub sleep: u64,
     pub style: Style,
     pub threshold: u8,
+    pub table: Vec<char>,
 }
 impl Config {
     // FIXME IM UGLY YOU ASSHOLE!

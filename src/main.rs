@@ -17,6 +17,7 @@ fn main() {
         None => return,
     };
     // matching the style givin to decide which operation to apply.
+
     match config.style {
         Style::OneChar => {
             img_to_onechar(config);
@@ -25,10 +26,14 @@ fn main() {
             img_to_braille(config);
         }
         Style::Ascii => {
-            let table = vec![
-                ' ', '.', ',', ':', ';', '\'', '"', '<', '>', 'i', '!', '(', ')', '[', ']', '(',
-                ')', '{', '}', '*', '8', 'B', '%', '$', '#', '@',
-            ];
+            let table = if config.table.is_empty() {
+                vec![
+                    ' ', '.', ',', ':', ';', '\'', '"', '<', '>', 'i', '!', '(', ')', '[', ']',
+                    '(', ')', '{', '}', '*', '8', 'B', '%', '$', '#', '@',
+                ]
+            } else {
+                config.table.clone()
+            };
             img_to_ascii(config, &table);
         }
         Style::Numbers => {

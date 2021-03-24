@@ -60,5 +60,7 @@ pub fn print_usage() {
     println!("\t      --colored\t\t Will return true colored(RGB) art. ");
     println!("\t      --background\t Will apply the colors on the \"background\" of the characters instead of coloring the foreground.");
     println!("\t      --sleep\t\t Followed by number, controls the sleep delay(milli seconds) between animation frames. default to 100");
+    println!("\t      --table\t\t Make a custom ascii table,(works only with \"ascii\" Style) seperated by ','\n\
+\t\t\t\t ex: tai -S ascii --table \" ,.,:,x,@\" image.png");
     println!("\t -v | --version\t\t Print tai's Version and exit!.");
 }
