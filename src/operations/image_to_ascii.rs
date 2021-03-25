@@ -1,6 +1,6 @@
 use std::{fs::File, thread::sleep, time::Duration};
 
-use image::{gif::GifDecoder, AnimationDecoder, DynamicImage, RgbaImage};
+use image::{gif::GifDecoder, AnimationDecoder, DynamicImage, GenericImageView, RgbaImage};
 
 use crate::config::config::Config;
 use crate::operations::floyd_dither::floyd_dither;
@@ -24,31 +24,59 @@ fn select_char(table: &[char], lumi: f32) -> char {
 }
 
 fn print_static_image(config: &Config, table: &[char]) {
-    let mut img = match process_image(config) {
-        Some(img) => img,
-        None => return,
+    // let mut img = match process_image(config) {
+    //     Some(img) => img,
+    //     None => return,
+    // };
+
+    let img = if let Ok(image) = image::open(&config.image_file) {
+        image
+    } else {
+        return eprintln!("Image path is not correct, OR image format is not supported!");
     };
+    let width = ((img.width() / config.scale) / 2) as u32;
+    let height = ((img.height() / config.scale) / 4) as u32;
+    let mut img = img
+        .resize_exact(width, height, image::imageops::FilterType::Lanczos3)
+        .to_rgba8();
 
     if config.dither {
         floyd_dither(&mut img);
     };
 
     // loop on every pixel in y and x of the image and calculate the luminance.
-    for y in 0..img.height() {
-        for x in 0..img.width() {
-            let [r, g, b, _] = img.get_pixel(x, y).0;
-            let cha = select_char(&table, get_luminance(r, g, b));
-            if config.colored {
-                print!("{}", colorize(&[r, g, b], cha, config.background));
-            } else {
-                print!("{}", cha);
-            }
+    for y in 0..img.height() - 4 {
+        for x in 0..img.width() - 2 {
+            loop_block(&img, config, table, x, y);
+            // let [r, g, b, _] = img.get_pixel(x, y).0;
+            // let cha = select_char(&table, get_luminance(r, g, b));
+            // if config.colored {
+            //     print!("{}", colorize(&[r, g, b], cha, config.background));
+            // } else {
+            //     print!("{}", cha);
+            // }
         }
         println!();
     }
     println!();
 }
-
+fn loop_block(img: &RgbaImage, config: &Config, table: &[char], x: u32, y: u32) {
+    let mut sum = 0.0;
+    for iy in y..y + 4 {
+        for ix in x..x + 2 {
+            let [r, g, b, _] = img.get_pixel(ix, iy).0;
+            sum += get_luminance(r, g, b);
+        }
+    }
+    let lumi_avg = sum / 8.0;
+    let cha = table[(lumi_avg / 255.0 * (table.len() as f32)) as usize];
+    if config.colored {
+        let [r, g, b, _] = img.get_pixel(x, y).0;
+        print!("{}", colorize(&[r, g, b], cha, config.background));
+    } else {
+        print!("{}", cha);
+    }
+}
 // this function will loop into frames converted to ascii
 // and sleep between each frame
 fn print_animated_image(config: &Config, table: &[char]) {
