@@ -1,7 +1,7 @@
 use std::{fs::File, thread::sleep, time::Duration};
 
 use crate::config::config::Config;
-use crate::operations::floyd_dither::floyd_dither;
+use crate::operations::floyd_dither::dither;
 use crate::utils::*;
 use image::{gif::GifDecoder, AnimationDecoder, DynamicImage, GenericImageView, RgbaImage};
 
@@ -25,7 +25,7 @@ pub fn img_to_braille(config: Config) {
             .to_rgba8();
         // checking if the user wants to dither the image.
         if config.dither {
-            floyd_dither(&mut img);
+            dither(&mut img, config.dither_scale);
         };
 
         print_static(&img, &config);
@@ -122,7 +122,7 @@ fn get_animated_frames(config: &Config) -> Vec<String> {
             .resize(width, height, image::imageops::FilterType::Lanczos3)
             .to_rgba8();
         if config.dither {
-            floyd_dither(&mut img);
+            dither(&mut img, config.dither_scale);
         }
         let translated_frame = translate_frame(&img, &config);
         // this ansi code will seek/save the cursor position to the start of the art

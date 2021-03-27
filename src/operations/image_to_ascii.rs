@@ -1,13 +1,29 @@
 use std::{fs::File, thread::sleep, time::Duration};
 
-use image::{gif::GifDecoder, AnimationDecoder, DynamicImage, GenericImageView, RgbaImage};
+use image::{gif::GifDecoder, AnimationDecoder, DynamicImage, RgbaImage};
 
 use crate::config::config::Config;
-use crate::operations::floyd_dither::floyd_dither;
+use crate::operations::floyd_dither::dither;
 use crate::utils::{colorize, get_luminance, process_image};
 
-// TODO: this is ugly, also not forgetting about the fact that it prints a char for every pixel,
-// SOLUTION: process the image buffer by "blocks" ex: 4x4 pixels per character.
+/* STATIC IMAGES
+
+algorithm for static images work this way:
+    - open the image buffer
+    - loop on the image buffer by 2x2 chuncks
+    - calculate the luminance of the 2x2 chunck and get the average luminance
+    - based on the luminance average select a character from the ascii table
+    - print the selected character
+*/
+
+/* ANIMATED IMAGES
+
+algorithm for animated images work this way:
+    - open the image frames
+    - convert each frame to ascii(like static image)
+    - return array of the processed frames
+    - loop into the array of frames and print it to stdout
+*/
 
 // img_to_ascii converts to ascii,numbers,blocks
 pub fn img_to_ascii(config: Config, table: &[char]) {
@@ -18,65 +34,26 @@ pub fn img_to_ascii(config: Config, table: &[char]) {
     }
 }
 
-// decide which character to choose from the table(array);
-fn select_char(table: &[char], lumi: f32) -> char {
-    table[((lumi / 255.0) * (table.len() - 1) as f32) as usize]
-}
-
 fn print_static_image(config: &Config, table: &[char]) {
-    // let mut img = match process_image(config) {
-    //     Some(img) => img,
-    //     None => return,
-    // };
-
-    let img = if let Ok(image) = image::open(&config.image_file) {
-        image
-    } else {
-        return eprintln!("Image path is not correct, OR image format is not supported!");
+    let mut img = match process_image(config) {
+        Some(img) => img,
+        None => return,
     };
-    let width = ((img.width() / config.scale) / 2) as u32;
-    let height = ((img.height() / config.scale) / 4) as u32;
-    let mut img = img
-        .resize_exact(width, height, image::imageops::FilterType::Lanczos3)
-        .to_rgba8();
 
     if config.dither {
-        floyd_dither(&mut img);
+        dither(&mut img, config.dither_scale);
     };
 
-    // loop on every pixel in y and x of the image and calculate the luminance.
-    for y in 0..img.height() - 4 {
+    for y in 0..img.height() - 2 {
         for x in 0..img.width() - 2 {
-            loop_block(&img, config, table, x, y);
-            // let [r, g, b, _] = img.get_pixel(x, y).0;
-            // let cha = select_char(&table, get_luminance(r, g, b));
-            // if config.colored {
-            //     print!("{}", colorize(&[r, g, b], cha, config.background));
-            // } else {
-            //     print!("{}", cha);
-            // }
+            let ch = get_char(&img, config, table, x, y);
+            print!("{}", ch);
         }
         println!();
     }
     println!();
 }
-fn loop_block(img: &RgbaImage, config: &Config, table: &[char], x: u32, y: u32) {
-    let mut sum = 0.0;
-    for iy in y..y + 4 {
-        for ix in x..x + 2 {
-            let [r, g, b, _] = img.get_pixel(ix, iy).0;
-            sum += get_luminance(r, g, b);
-        }
-    }
-    let lumi_avg = sum / 8.0;
-    let cha = table[(lumi_avg / 255.0 * (table.len() as f32)) as usize];
-    if config.colored {
-        let [r, g, b, _] = img.get_pixel(x, y).0;
-        print!("{}", colorize(&[r, g, b], cha, config.background));
-    } else {
-        print!("{}", cha);
-    }
-}
+
 // this function will loop into frames converted to ascii
 // and sleep between each frame
 fn print_animated_image(config: &Config, table: &[char]) {
@@ -115,7 +92,7 @@ fn get_animated_frames(config: &Config, table: &[char]) -> Vec<String> {
             .resize_exact(width, height, image::imageops::FilterType::Lanczos3)
             .to_rgba8();
         if config.dither {
-            floyd_dither(&mut img);
+            dither(&mut img, config.dither_scale);
         }
         let translated_frame = translate_frame(&img, &config, table);
         // this code will seek/save the cursor position to the start of the art
@@ -129,17 +106,37 @@ fn get_animated_frames(config: &Config, table: &[char]) -> Vec<String> {
 // this function will convert the pixels into ascii chars, put it in a string and return it
 fn translate_frame(img: &RgbaImage, config: &Config, table: &[char]) -> String {
     let mut out = String::new();
-    for y in 0..img.height() {
-        for x in 0..img.width() {
-            let [r, g, b, _] = img.get_pixel(x, y).0;
-            let ch = select_char(&table, get_luminance(r, g, b));
-            if config.colored {
-                out.push_str(&colorize(&[r, g, b], ch, config.background));
-            } else {
-                out.push(ch);
-            }
+    for y in 0..img.height() - 2 {
+        for x in 0..img.width() - 2 {
+            let cha = get_char(&img, config, table, x, y);
+            out.push_str(&cha);
         }
         out.push('\n');
     }
     out
+}
+
+fn get_char(img: &RgbaImage, config: &Config, table: &[char], x: u32, y: u32) -> String {
+    let mut sum = 0.0;
+    let mut i = 0.0;
+    for iy in y..y + 2 {
+        for ix in x..x + 2 {
+            let [r, g, b, _] = img.get_pixel(ix, iy).0;
+            let lumi = get_luminance(r, g, b);
+            if lumi < config.threshold as f32 {
+                continue;
+            }
+            sum += lumi;
+            i += 1.0;
+        }
+    }
+    let lumi_avg = sum / i;
+    let cha = table[(lumi_avg / 255.0 * ((table.len() - 1) as f32)) as usize];
+    let cha = if config.colored {
+        let [r, g, b, _] = img.get_pixel(x, y).0;
+        format!("{}", colorize(&[r, g, b], cha, config.background))
+    } else {
+        format!("{}", cha)
+    };
+    cha
 }

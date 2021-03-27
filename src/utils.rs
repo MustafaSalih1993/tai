@@ -1,5 +1,6 @@
-use crate::config::config::Config;
 use image::{GenericImageView, RgbaImage};
+
+use crate::config::config::Config;
 
 // luminance formula credits: https://stackoverflow.com/a/596243
 // >>> Luminance = 0.2126*R + 0.7152*G + 0.0722*B <<<
@@ -21,25 +22,20 @@ pub fn colorize(rgb: &[u8; 3], ch: char, bg_fg: u8) -> String {
 // this will open the image path,
 // and resize the image and turn it into image buffer;
 pub fn process_image(config: &Config) -> Option<RgbaImage> {
-    // checking if the image path is valid
-    let img = match image::open(&config.image_file) {
-        Ok(val) => val,
-        Err(_) => {
-            eprintln!("common.: Failed to open the image path!");
-            return None;
-        }
+    let img = if let Ok(image) = image::open(&config.image_file) {
+        image
+    } else {
+        eprintln!("Image path is not correct, OR image format is not supported!");
+        return None;
     };
-    let img = img.resize_exact(
-        (img.width() / config.scale) as u32,
-        (img.height() / (config.scale * 2) as u32) as u32,
-        image::imageops::FilterType::Lanczos3,
-    );
-
-    let img = match config.colored {
-        false => img.grayscale().to_rgba8(),
-        true => img.to_rgba8(),
+    let width = ((img.width() / config.scale) / 2) as u32;
+    let height = ((img.height() / config.scale) / 4) as u32;
+    let img = img.resize_exact(width, height, image::imageops::FilterType::Lanczos3);
+    let img = if config.colored {
+        img.to_rgba8()
+    } else {
+        img.grayscale().to_rgba8()
     };
-
     Some(img)
 }
 
@@ -50,9 +46,10 @@ pub fn print_usage() {
     println!("OPTIONS: ");
     println!("\t -h | --help\t\t Show this help message");
     println!("\t -d | --dither\t\t enables image dithering");
+    println!("\t -D | --dither-scale\t used with \"-d\" option, controls the scale number for the dithering, default to 16");
     println!("\t -s | --scale\t\t Followed by a number to Resize the output (lower number means bigger output) default to 2");
     println!("\t -t | --threshold\t Followed by a number (between 1 255) to select the threshold value,\n\
-\t\t\t\t default to 128, works with \"onechar\" and \"braille\" styles");
+\t\t\t\t default to 128");
     println!(
         "\t -S | --style\t\t Followed by one of: {{ascii, numbers, blocks, onechar, braille}}, default to \"braille\""
     );

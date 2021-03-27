@@ -15,6 +15,7 @@ pub struct Config {
     pub background: u8,
     pub colored: bool,
     pub dither: bool,
+    pub dither_scale: u8,
     pub image_file: String,
     pub onechar: char,
     pub scale: u32,

@@ -10,6 +10,7 @@ pub fn parse(args: Vec<String>) -> Option<Config> {
     let mut dither: bool = false;
     let mut onechar: char = '█';
     let mut scale: u32 = 2;
+    let mut dither_scale: u8 = 16;
     let mut sleep: u64 = 100;
     let mut style: Style = Style::Braille;
     let mut threshold: u8 = 128;
@@ -51,6 +52,20 @@ pub fn parse(args: Vec<String>) -> Option<Config> {
                 };
                 dither = true;
                 _i += 1
+            }
+            "-D" | "--dither-scale" => {
+                if _i == args.len() - 1 {
+                    print_usage();
+                    return None;
+                };
+                let input = args[_i + 1].parse::<u8>();
+                dither_scale = if input.is_err() || input.unwrap() < 1 {
+                    eprintln!("Error: invalid dither-scale value. using defaults!");
+                    dither_scale
+                } else {
+                    args[_i + 1].parse().unwrap_or(dither_scale)
+                };
+                _i += 1;
             }
             "--onechar" => {
                 // modify the character when using the (--style onechar) flag;
@@ -138,6 +153,7 @@ pub fn parse(args: Vec<String>) -> Option<Config> {
         background,
         colored,
         dither,
+        dither_scale,
         image_file,
         onechar,
         scale,
