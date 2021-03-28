@@ -9,6 +9,9 @@ use operations::{
 };
 use std::env;
 
+// TODO: need better naming for functions and variables, it's sucks because
+//       im not a native English speaker.
+
 fn main() {
     let mut args = env::args();
     // parse args and return a valid config with defaults
@@ -28,8 +31,8 @@ fn main() {
         Style::Ascii => {
             let table = if config.table.is_empty() {
                 vec![
-                    ' ', '.', ',', ':', ';', '\'', '"', '<', '>', 'i', '!', '(', ')', '[', ']',
-                    '(', ')', '{', '}', '*', '8', 'B', '%', '$', '#', '@',
+                    ' ', ' ', ' ', '.', '.', '.', ',', ',', ',', '\'', ';', ':', '<', '>', 'l',
+                    'o', 'b', 'd', 'x', 'k', 'O', '0', 'K', 'X', 'N', 'W', 'M',
                 ]
             } else {
                 config.table.clone()
@@ -37,7 +40,9 @@ fn main() {
             img_to_ascii(config, &table);
         }
         Style::Numbers => {
-            let table = vec![' ', '2', '7', '4', '1', '3', '9', '8', '5', '6', '0'];
+            let table = vec![
+                ' ', ' ', ' ', ' ', ' ', '0', '1', '7', '6', '9', '4', '2', '3', '8',
+            ];
             img_to_ascii(config, &table);
         }
         Style::Blocks => {

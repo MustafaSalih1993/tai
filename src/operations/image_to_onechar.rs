@@ -6,7 +6,10 @@ use crate::utils::{get_luminance, process_image};
 // source: https://en.wikipedia.org/wiki/Thresholding_(image_processing)
 
 pub fn img_to_onechar(config: Config) {
-    let mut img = process_image(&config).unwrap();
+    let mut img = match process_image(&config) {
+        Some(img) => img,
+        None => return,
+    };
     for y in 0..img.height() {
         for x in 0..img.width() {
             let mut pixel = img.get_pixel_mut(x, y).0;

@@ -1,11 +1,9 @@
 use image::RgbaImage;
-// TODO: make the "scale" dynamic by the user to control how many colors will be inside.
 // This algorithm to make a dithered image, it's error diff algorithm check the source below.
 // source : https://en.wikipedia.org/wiki/Floyd%E2%80%93Steinberg_dithering
 
-pub fn floyd_dither(img: &mut RgbaImage) {
-    // this will control the colors in the image(more value==more colors).
-    let scale = 16.0;
+pub fn dither(img: &mut RgbaImage, dither_scale: u8) {
+    let scale = dither_scale as f32;
 
     for y in 0..img.height() - 1 {
         for x in 1..img.width() - 1 {
@@ -32,7 +30,6 @@ pub fn floyd_dither(img: &mut RgbaImage) {
     }
 }
 
-// TODO: FIXME, IM UGLY you fucking asshole
 // this helper function will calculate the the neighbor pixel and add value from the error pixel as refrenced in wikipedia.
 fn calculate_and_assign_pixel(
     img: &mut RgbaImage,     // imagebuffer
