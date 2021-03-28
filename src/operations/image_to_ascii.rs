@@ -34,6 +34,29 @@ pub fn img_to_ascii(config: Config, table: &[char]) {
     }
 }
 
+// this function will loop into a small chunck of pixels (2*2) and return a string containing a character
+fn get_char(img: &RgbaImage, config: &Config, table: &[char], x: u32, y: u32) -> String {
+    let mut sum = 0.0;
+    let mut i = 0.0;
+    for iy in y..y + 2 {
+        for ix in x..x + 2 {
+            let [r, g, b, _] = img.get_pixel(ix, iy).0;
+            let lumi = get_luminance(r, g, b);
+            sum += lumi;
+            i += 1.0;
+        }
+    }
+    let lumi_avg = sum / i;
+    let cha = table[(lumi_avg / 255.0 * ((table.len() - 1) as f32)) as usize];
+    let cha = if config.colored {
+        let [r, g, b, _] = img.get_pixel(x, y).0;
+        format!("{}", colorize(&[r, g, b], cha, config.background))
+    } else {
+        format!("{}", cha)
+    };
+    cha
+}
+
 fn print_static_image(config: &Config, table: &[char]) {
     let mut img = match process_image(config) {
         Some(img) => img,
@@ -44,8 +67,8 @@ fn print_static_image(config: &Config, table: &[char]) {
         dither(&mut img, config.dither_scale);
     };
 
-    for y in 0..img.height() - 2 {
-        for x in 0..img.width() - 2 {
+    for y in (0..img.height() - 2).step_by(2) {
+        for x in (0..img.width() - 2).step_by(2) {
             let ch = get_char(&img, config, table, x, y);
             print!("{}", ch);
         }
@@ -106,37 +129,12 @@ fn get_animated_frames(config: &Config, table: &[char]) -> Vec<String> {
 // this function will convert the pixels into ascii chars, put it in a string and return it
 fn translate_frame(img: &RgbaImage, config: &Config, table: &[char]) -> String {
     let mut out = String::new();
-    for y in 0..img.height() - 2 {
-        for x in 0..img.width() - 2 {
+    for y in (0..img.height() - 2).step_by(2) {
+        for x in (0..img.width() - 2).step_by(2) {
             let cha = get_char(&img, config, table, x, y);
             out.push_str(&cha);
         }
         out.push('\n');
     }
     out
-}
-
-fn get_char(img: &RgbaImage, config: &Config, table: &[char], x: u32, y: u32) -> String {
-    let mut sum = 0.0;
-    let mut i = 0.0;
-    for iy in y..y + 2 {
-        for ix in x..x + 2 {
-            let [r, g, b, _] = img.get_pixel(ix, iy).0;
-            let lumi = get_luminance(r, g, b);
-            if lumi < config.threshold as f32 {
-                continue;
-            }
-            sum += lumi;
-            i += 1.0;
-        }
-    }
-    let lumi_avg = sum / i;
-    let cha = table[(lumi_avg / 255.0 * ((table.len() - 1) as f32)) as usize];
-    let cha = if config.colored {
-        let [r, g, b, _] = img.get_pixel(x, y).0;
-        format!("{}", colorize(&[r, g, b], cha, config.background))
-    } else {
-        format!("{}", cha)
-    };
-    cha
 }

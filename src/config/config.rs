@@ -1,4 +1,7 @@
-// TODO: Better argument parsing
+/* TODO:
+  - Better argument parsing
+  - Implement Defaults to Style
+*/
 use crate::config::argument_parsing;
 
 #[derive(Debug)]
@@ -25,7 +28,6 @@ pub struct Config {
     pub table: Vec<char>,
 }
 impl Config {
-    // FIXME IM UGLY YOU ASSHOLE!
     // Parsing arguments and return a valid config
     pub fn new(args: &mut std::env::Args) -> Option<Self> {
         // getting rid of the first arg (program name)

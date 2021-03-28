@@ -5,6 +5,17 @@ use crate::operations::floyd_dither::dither;
 use crate::utils::*;
 use image::{gif::GifDecoder, AnimationDecoder, DynamicImage, GenericImageView, RgbaImage};
 
+/* Image to braille:
+   source: https://en.wikipedia.org/wiki/Braille_Patterns
+
+- open the image
+- loop on the image buffer
+- collect a chunck of pixels (2*4)
+- calculate the chunck above and return a binary
+- parse the binary and turn it to a valid number
+- calculate the number and print a char based on it
+*/
+
 pub fn img_to_braille(config: Config) {
     // checking if its animated
     if config.image_file.ends_with(".gif") {
@@ -55,20 +66,20 @@ fn get_block_signals(threshold: u8, img: &RgbaImage, coord_x: u32, coord_y: u32)
 // (1 = raised pixel, 0 = unraised pixel), and then convert it to a binary and then to a valid char.
 fn translate(map: &mut [[u8; 2]; 4]) -> char {
     /* our pixel block(map) look like this:
-      ---------
-      | 0 | 1 |
-      | 2 | 3 |
-      | 4 | 5 |
-      | 6 | 7 |
-      ---------
-    we want to convert it to this:
-      ---------
-      | 0 | 3 |
-      | 1 | 4 |
-      | 2 | 5 |
-      | 6 | 7 |
-      ---------
-    source: https://en.wikipedia.org/wiki/Braille_Patterns*/
+          ---------
+          | 0 | 1 |
+          | 2 | 3 |
+          | 4 | 5 |
+          | 6 | 7 |
+          ---------
+        we want to convert it to this:
+          ---------
+          | 0 | 3 |
+          | 1 | 4 |
+          | 2 | 5 |
+          | 6 | 7 |
+          ---------
+    */
     // making a copy to to not mess up the indexes of the original pixel matrix.
     let cloned = *map;
     map[0][1] = cloned[1][1];
@@ -89,6 +100,24 @@ fn translate(map: &mut [[u8; 2]; 4]) -> char {
     std::char::from_u32(c + 0x2800).unwrap()
 }
 
+// process a static image
+fn print_static(img: &RgbaImage, config: &Config) {
+    for y in (0..img.height() - 4).step_by(4) {
+        for x in (0..img.width() - 2).step_by(2) {
+            let mut map = get_block_signals(config.threshold, &img, x, y);
+            let ch = translate(&mut map);
+            if config.colored {
+                let [r, g, b, _] = img.get_pixel(x, y).0;
+                print!("{}", colorize(&[r, g, b], ch, config.background));
+            } else {
+                print!("{}", ch);
+            }
+        }
+        println!()
+    }
+}
+
+// process animated image
 fn print_animated_image(config: &Config) {
     let frames = get_animated_frames(&config);
     loop {
@@ -149,19 +178,4 @@ fn translate_frame(img: &RgbaImage, config: &Config) -> String {
         out.push('\n');
     }
     out
-}
-fn print_static(img: &RgbaImage, config: &Config) {
-    for y in (0..img.height() - 4).step_by(4) {
-        for x in (0..img.width() - 2).step_by(2) {
-            let mut map = get_block_signals(config.threshold, &img, x, y);
-            let ch = translate(&mut map);
-            if config.colored {
-                let [r, g, b, _] = img.get_pixel(x, y).0;
-                print!("{}", colorize(&[r, g, b], ch, config.background));
-            } else {
-                print!("{}", ch);
-            }
-        }
-        println!()
-    }
 }

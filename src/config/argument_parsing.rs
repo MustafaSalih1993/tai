@@ -171,6 +171,9 @@ fn check_style_arg(arg: &str) -> Style {
         "braille" => Style::Braille,
         "numbers" => Style::Numbers,
         "onechar" => Style::OneChar,
-        _ => Style::Braille,
+        _ => {
+            eprintln!("Error: Unknown style. using defaults");
+            Style::Braille
+        }
     }
 }
