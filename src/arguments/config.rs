@@ -1,8 +1,19 @@
+<<<<<<< HEAD:src/arguments/config.rs
+/* TODO:
+  - Better argument parsing
+  - Implement Defaults to Style
+*/
+use crate::arguments::argument_parsing;
+||||||| f1692f8:src/config/config.rs
+// TODO: Better argument parsing
+use crate::config::argument_parsing;
+=======
 /* TODO:
   - Better argument parsing
   - Implement Defaults to Style
 */
 use crate::config::argument_parsing;
+>>>>>>> master:src/config/config.rs
 
 #[derive(Debug)]
 pub enum Style {

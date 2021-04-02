@@ -1,11 +1,41 @@
-use std::{fs::File, thread::sleep, time::Duration};
-
+use crate::arguments::config::Config;
+use crate::operations::dither::Dither;
+use crate::utils::{colorize, get_luminance, process_image};
 use image::{gif::GifDecoder, AnimationDecoder, DynamicImage, RgbaImage};
+use std::{fs::File, thread::sleep, time::Duration};
+/* STATIC IMAGES
 
+algorithm for static images work this way:
+    - open the image buffer
+    - loop on the image buffer by 2x2 chuncks
+    - calculate the luminance of the 2x2 chunck and get the average luminance
+    - based on the luminance average select a character from the ascii table
+    - print the selected character
+*/
+
+<<<<<<< HEAD:src/operations/ascii.rs
+/* ANIMATED IMAGES
+||||||| f1692f8:src/operations/image_to_ascii.rs
+use crate::config::config::Config;
+use crate::operations::floyd_dither::floyd_dither;
+use crate::utils::{colorize, get_luminance, process_image};
+=======
 use crate::config::config::Config;
 use crate::operations::floyd_dither::dither;
 use crate::utils::{colorize, get_luminance, process_image};
+>>>>>>> master:src/operations/image_to_ascii.rs
 
+<<<<<<< HEAD:src/operations/ascii.rs
+algorithm for animated images work this way:
+    - open the image frames
+    - convert each frame to ascii(like static image)
+    - return array of the processed frames
+    - loop into the array of frames and print it to stdout
+*/
+||||||| f1692f8:src/operations/image_to_ascii.rs
+// TODO: this is ugly, also not forgetting about the fact that it prints a char for every pixel,
+// SOLUTION: process the image buffer by "blocks" ex: 4x4 pixels per character.
+=======
 /* STATIC IMAGES
 
 algorithm for static images work this way:
@@ -24,8 +54,10 @@ algorithm for animated images work this way:
     - return array of the processed frames
     - loop into the array of frames and print it to stdout
 */
+>>>>>>> master:src/operations/image_to_ascii.rs
 
 // img_to_ascii converts to ascii,numbers,blocks
+
 pub fn img_to_ascii(config: Config, table: &[char]) {
     if config.image_file.ends_with(".gif") {
         print_animated_image(&config, table);
@@ -34,6 +66,33 @@ pub fn img_to_ascii(config: Config, table: &[char]) {
     }
 }
 
+<<<<<<< HEAD:src/operations/ascii.rs
+// this function will loop into a small chunck of pixels (2*2) and return a string containing a character
+fn get_char(img: &RgbaImage, config: &Config, table: &[char], x: u32, y: u32) -> String {
+    let mut sum = 0.0;
+    let mut count = 0.0;
+    for iy in y..y + 2 {
+        for ix in x..x + 2 {
+            let [r, g, b, _] = img.get_pixel(ix, iy).0;
+            let lumi = get_luminance(r, g, b);
+            sum += lumi;
+            count += 1.0;
+        }
+    }
+    let lumi_avg = sum / count;
+    let cha = table[(lumi_avg / 255.0 * ((table.len() - 1) as f32)) as usize];
+    let cha = if config.colored {
+        let [r, g, b, _] = img.get_pixel(x, y).0;
+        colorize(&[r, g, b], cha, config.background)
+    } else {
+        format!("{}", cha)
+    };
+    cha
+||||||| f1692f8:src/operations/image_to_ascii.rs
+// decide which character to choose from the table(array);
+fn select_char(table: &[char], lumi: f32) -> char {
+    table[((lumi / 255.0) * (table.len() - 1) as f32) as usize]
+=======
 // this function will loop into a small chunck of pixels (2*2) and return a string containing a character
 fn get_char(img: &RgbaImage, config: &Config, table: &[char], x: u32, y: u32) -> String {
     let mut sum = 0.0;
@@ -55,6 +114,7 @@ fn get_char(img: &RgbaImage, config: &Config, table: &[char], x: u32, y: u32) ->
         format!("{}", cha)
     };
     cha
+>>>>>>> master:src/operations/image_to_ascii.rs
 }
 
 fn print_static_image(config: &Config, table: &[char]) {
@@ -64,7 +124,13 @@ fn print_static_image(config: &Config, table: &[char]) {
     };
 
     if config.dither {
+<<<<<<< HEAD:src/operations/ascii.rs
+        img.dither(config.dither_scale);
+||||||| f1692f8:src/operations/image_to_ascii.rs
+        floyd_dither(&mut img);
+=======
         dither(&mut img, config.dither_scale);
+>>>>>>> master:src/operations/image_to_ascii.rs
     };
 
     for y in (0..img.height() - 2).step_by(2) {
@@ -108,15 +174,23 @@ fn get_animated_frames(config: &Config, table: &[char]) -> Vec<String> {
 
     for frame in frames {
         // prolly this is not efficient, need to read image crate docs more!
-        let img = DynamicImage::from(DynamicImage::ImageRgba8(frame.buffer().clone()));
+        let img = DynamicImage::ImageRgba8(frame.buffer().clone());
         let width = ((frame.buffer().width() / config.scale) / 2) as u32;
         let height = ((frame.buffer().height() / config.scale) / 4) as u32;
         let mut img = img
             .resize_exact(width, height, image::imageops::FilterType::Lanczos3)
             .to_rgba8();
+
         if config.dither {
+<<<<<<< HEAD:src/operations/ascii.rs
+            img.dither(config.dither_scale);
+||||||| f1692f8:src/operations/image_to_ascii.rs
+            floyd_dither(&mut img);
+=======
             dither(&mut img, config.dither_scale);
+>>>>>>> master:src/operations/image_to_ascii.rs
         }
+
         let translated_frame = translate_frame(&img, &config, table);
         // this code will seek/save the cursor position to the start of the art
         // read about control characters: https://en.wikipedia.org/wiki/Control_character

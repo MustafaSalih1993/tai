@@ -1,4 +1,4 @@
-pub mod floyd_dither;
-pub mod image_to_ascii;
-pub mod image_to_braille;
-pub mod image_to_onechar;
+pub mod ascii;
+pub mod braille;
+pub mod dither;
+pub mod onechar;

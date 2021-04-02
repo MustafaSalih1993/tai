@@ -1,9 +1,31 @@
+<<<<<<< HEAD:src/operations/braille.rs
+use crate::arguments::config::Config;
+use crate::operations::dither::Dither;
+||||||| f1692f8:src/operations/image_to_braille.rs
+use std::{fs::File, thread::sleep, time::Duration};
+
+use crate::config::config::Config;
+use crate::operations::floyd_dither::floyd_dither;
+=======
 use std::{fs::File, thread::sleep, time::Duration};
 
 use crate::config::config::Config;
 use crate::operations::floyd_dither::dither;
+>>>>>>> master:src/operations/image_to_braille.rs
 use crate::utils::*;
 use image::{gif::GifDecoder, AnimationDecoder, DynamicImage, GenericImageView, RgbaImage};
+use std::{fs::File, thread::sleep, time::Duration};
+
+/* Image to braille:
+   source: https://en.wikipedia.org/wiki/Braille_Patterns
+
+- open the image
+- loop on the image buffer
+- collect a chunck of pixels (2*4)
+- calculate the chunck above and return a binary
+- parse the binary and turn it to a valid number
+- calculate the number and print a char based on it
+*/
 
 /* Image to braille:
    source: https://en.wikipedia.org/wiki/Braille_Patterns
@@ -36,7 +58,13 @@ pub fn img_to_braille(config: Config) {
             .to_rgba8();
         // checking if the user wants to dither the image.
         if config.dither {
+<<<<<<< HEAD:src/operations/braille.rs
+            img.dither(config.dither_scale);
+||||||| f1692f8:src/operations/image_to_braille.rs
+            floyd_dither(&mut img);
+=======
             dither(&mut img, config.dither_scale);
+>>>>>>> master:src/operations/image_to_braille.rs
         };
 
         print_static(&img, &config);
@@ -144,14 +172,20 @@ fn get_animated_frames(config: &Config) -> Vec<String> {
 
     for frame in frames {
         // prolly this is not efficient, need to read image crate docs more!
-        let img = DynamicImage::from(DynamicImage::ImageRgba8(frame.buffer().clone()));
+        let img = DynamicImage::ImageRgba8(frame.buffer().clone());
         let width = ((frame.buffer().width() / config.scale) / 2) as u32;
         let height = ((frame.buffer().height() / config.scale) / 4) as u32;
         let mut img = img
             .resize(width, height, image::imageops::FilterType::Lanczos3)
             .to_rgba8();
         if config.dither {
+<<<<<<< HEAD:src/operations/braille.rs
+            img.dither(config.dither_scale);
+||||||| f1692f8:src/operations/image_to_braille.rs
+            floyd_dither(&mut img);
+=======
             dither(&mut img, config.dither_scale);
+>>>>>>> master:src/operations/image_to_braille.rs
         }
         let translated_frame = translate_frame(&img, &config);
         // this ansi code will seek/save the cursor position to the start of the art
