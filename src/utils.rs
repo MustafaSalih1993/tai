@@ -1,6 +1,6 @@
 use image::{GenericImageView, RgbaImage};
 
-use crate::config::config::Config;
+use crate::arguments::config::Config;
 
 // luminance formula credits: https://stackoverflow.com/a/596243
 // >>> Luminance = 0.2126*R + 0.7152*G + 0.0722*B <<<

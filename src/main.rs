@@ -1,12 +1,9 @@
-mod config;
+mod arguments;
 mod operations;
 mod utils;
 
-use config::config::{Config, Style};
-use operations::{
-    image_to_ascii::img_to_ascii, image_to_braille::img_to_braille,
-    image_to_onechar::img_to_onechar,
-};
+use arguments::config::{Config, Style};
+use operations::{ascii::img_to_ascii, braille::img_to_braille, onechar::img_to_onechar};
 use std::env;
 
 // TODO: need better naming for functions and variables, it's sucks because

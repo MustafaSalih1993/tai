@@ -2,7 +2,7 @@
   - Better argument parsing
   - Implement Defaults to Style
 */
-use crate::config::argument_parsing;
+use crate::arguments::argument_parsing;
 
 #[derive(Debug)]
 pub enum Style {

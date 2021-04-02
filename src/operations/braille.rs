@@ -1,9 +1,8 @@
-use std::{fs::File, thread::sleep, time::Duration};
-
-use crate::config::config::Config;
-use crate::operations::floyd_dither::dither;
+use crate::arguments::config::Config;
+use crate::operations::dither::Dither;
 use crate::utils::*;
 use image::{gif::GifDecoder, AnimationDecoder, DynamicImage, GenericImageView, RgbaImage};
+use std::{fs::File, thread::sleep, time::Duration};
 
 /* Image to braille:
    source: https://en.wikipedia.org/wiki/Braille_Patterns
@@ -36,7 +35,7 @@ pub fn img_to_braille(config: Config) {
             .to_rgba8();
         // checking if the user wants to dither the image.
         if config.dither {
-            dither(&mut img, config.dither_scale);
+            img.dither(config.dither_scale);
         };
 
         print_static(&img, &config);
@@ -144,14 +143,14 @@ fn get_animated_frames(config: &Config) -> Vec<String> {
 
     for frame in frames {
         // prolly this is not efficient, need to read image crate docs more!
-        let img = DynamicImage::from(DynamicImage::ImageRgba8(frame.buffer().clone()));
+        let img = DynamicImage::ImageRgba8(frame.buffer().clone());
         let width = ((frame.buffer().width() / config.scale) / 2) as u32;
         let height = ((frame.buffer().height() / config.scale) / 4) as u32;
         let mut img = img
             .resize(width, height, image::imageops::FilterType::Lanczos3)
             .to_rgba8();
         if config.dither {
-            dither(&mut img, config.dither_scale);
+            img.dither(config.dither_scale);
         }
         let translated_frame = translate_frame(&img, &config);
         // this ansi code will seek/save the cursor position to the start of the art

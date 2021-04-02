@@ -124,7 +124,7 @@ pub fn parse(args: Vec<String>) -> Option<Config> {
                 };
                 table = args[_i + 1]
                     .parse::<String>()
-                    .unwrap_or("".to_string())
+                    .unwrap_or_else(|_| "".to_string())
                     .split(',')
                     .map(|token| token.trim().chars().next().unwrap_or(' '))
                     .collect::<Vec<char>>();

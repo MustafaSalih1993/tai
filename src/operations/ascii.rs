@@ -1,11 +1,8 @@
-use std::{fs::File, thread::sleep, time::Duration};
-
-use image::{gif::GifDecoder, AnimationDecoder, DynamicImage, RgbaImage};
-
-use crate::config::config::Config;
-use crate::operations::floyd_dither::dither;
+use crate::arguments::config::Config;
+use crate::operations::dither::Dither;
 use crate::utils::{colorize, get_luminance, process_image};
-
+use image::{gif::GifDecoder, AnimationDecoder, DynamicImage, RgbaImage};
+use std::{fs::File, thread::sleep, time::Duration};
 /* STATIC IMAGES
 
 algorithm for static images work this way:
@@ -26,6 +23,7 @@ algorithm for animated images work this way:
 */
 
 // img_to_ascii converts to ascii,numbers,blocks
+
 pub fn img_to_ascii(config: Config, table: &[char]) {
     if config.image_file.ends_with(".gif") {
         print_animated_image(&config, table);
@@ -37,20 +35,20 @@ pub fn img_to_ascii(config: Config, table: &[char]) {
 // this function will loop into a small chunck of pixels (2*2) and return a string containing a character
 fn get_char(img: &RgbaImage, config: &Config, table: &[char], x: u32, y: u32) -> String {
     let mut sum = 0.0;
-    let mut i = 0.0;
+    let mut count = 0.0;
     for iy in y..y + 2 {
         for ix in x..x + 2 {
             let [r, g, b, _] = img.get_pixel(ix, iy).0;
             let lumi = get_luminance(r, g, b);
             sum += lumi;
-            i += 1.0;
+            count += 1.0;
         }
     }
-    let lumi_avg = sum / i;
+    let lumi_avg = sum / count;
     let cha = table[(lumi_avg / 255.0 * ((table.len() - 1) as f32)) as usize];
     let cha = if config.colored {
         let [r, g, b, _] = img.get_pixel(x, y).0;
-        format!("{}", colorize(&[r, g, b], cha, config.background))
+        colorize(&[r, g, b], cha, config.background)
     } else {
         format!("{}", cha)
     };
@@ -64,7 +62,7 @@ fn print_static_image(config: &Config, table: &[char]) {
     };
 
     if config.dither {
-        dither(&mut img, config.dither_scale);
+        img.dither(config.dither_scale);
     };
 
     for y in (0..img.height() - 2).step_by(2) {
@@ -108,15 +106,17 @@ fn get_animated_frames(config: &Config, table: &[char]) -> Vec<String> {
 
     for frame in frames {
         // prolly this is not efficient, need to read image crate docs more!
-        let img = DynamicImage::from(DynamicImage::ImageRgba8(frame.buffer().clone()));
+        let img = DynamicImage::ImageRgba8(frame.buffer().clone());
         let width = ((frame.buffer().width() / config.scale) / 2) as u32;
         let height = ((frame.buffer().height() / config.scale) / 4) as u32;
         let mut img = img
             .resize_exact(width, height, image::imageops::FilterType::Lanczos3)
             .to_rgba8();
+
         if config.dither {
-            dither(&mut img, config.dither_scale);
+            img.dither(config.dither_scale);
         }
+
         let translated_frame = translate_frame(&img, &config, table);
         // this code will seek/save the cursor position to the start of the art
         // read about control characters: https://en.wikipedia.org/wiki/Control_character
