@@ -1,5 +1,5 @@
 use crate::arguments::config::Config;
-use image::{GenericImageView, RgbaImage};
+use image::{DynamicImage, GenericImageView, RgbaImage};
 
 // luminance formula credits: https://stackoverflow.com/a/596243
 // >>> Luminance = 0.2126*R + 0.7152*G + 0.0722*B <<<
@@ -18,6 +18,21 @@ pub fn colorize(rgb: &[u8; 3], ch: char, bg_fg: u8) -> String {
     format!("{}{}{}", prefix, ch, postfix)
 }
 
+pub fn resize_image(img: DynamicImage, config: &Config) -> RgbaImage {
+    let (width, height) = match config.original_size {
+        false => {
+            let width = ((img.width() / config.scale) / 2) as u32;
+            let height = ((img.height() / config.scale) / 4) as u32;
+            (width, height)
+        }
+        true => (img.width(), img.height()),
+    };
+    let img = img
+        .resize(width, height, image::imageops::FilterType::Lanczos3)
+        .to_rgba8();
+    img
+}
+
 // this will open the image path,
 // and resize the image and turn it into image buffer;
 pub fn process_image(config: &Config) -> Option<RgbaImage> {
@@ -27,8 +42,14 @@ pub fn process_image(config: &Config) -> Option<RgbaImage> {
         eprintln!("Image path is not correct, OR image format is not supported!");
         return None;
     };
-    let width = ((img.width() / config.scale) / 2) as u32;
-    let height = ((img.height() / config.scale) / 4) as u32;
+    let width = match config.original_size {
+        true => img.width(),
+        false => ((img.width() / config.scale) / 2) as u32,
+    };
+    let height = match config.original_size {
+        true => img.height(),
+        false => ((img.height() / config.scale) / 4) as u32,
+    };
     let img = img.resize_exact(width, height, image::imageops::FilterType::Lanczos3);
     let img = if config.colored {
         img.to_rgba8()
@@ -46,7 +67,8 @@ pub fn print_usage() {
     println!("\t -h | --help\t\t Show this help message");
     println!("\t -d | --dither\t\t enables image dithering");
     println!("\t -D | --dither-scale\t used with \"-d\" option, controls the scale number for the dithering, default to 16");
-    println!("\t -s | --scale\t\t Followed by a number to Resize the output (lower number means bigger output) default to 2");
+    println!("\t -N | --no-scale\t will keep the original size of the image, default to false");
+    println!("\t -s | --size\t\t Followed by a number to Resize the output (lower number means bigger output) default to 2");
     println!("\t -t | --threshold\t Followed by a number (between 1 255) to select the threshold value,\n\
 \t\t\t\t default to 128");
     println!(

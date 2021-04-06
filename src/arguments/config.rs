@@ -21,12 +21,39 @@ pub struct Config {
     pub dither_scale: u8,
     pub image_file: String,
     pub onechar: char,
+    pub original_size: bool,
     pub scale: u32,
     pub sleep: u64,
     pub style: Style,
     pub threshold: u8,
     pub table: Vec<char>,
 }
+
+impl Default for Style {
+    fn default() -> Self {
+        Self::Braille
+    }
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            background: 38,
+            colored: false,
+            dither: false,
+            dither_scale: 16,
+            image_file: String::new(),
+            onechar: '█',
+            original_size: false,
+            scale: 2,
+            sleep: 100,
+            style: Style::default(),
+            threshold: 128,
+            table: vec![],
+        }
+    }
+}
+
 impl Config {
     // Parsing arguments and return a valid config
     pub fn new(args: &mut std::env::Args) -> Option<Self> {

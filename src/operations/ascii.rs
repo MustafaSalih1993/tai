@@ -1,8 +1,10 @@
 use crate::arguments::config::Config;
 use crate::operations::dither::Dither;
+use crate::utils::resize_image;
 use crate::utils::{colorize, get_luminance, process_image};
 use image::{gif::GifDecoder, AnimationDecoder, DynamicImage, RgbaImage};
 use std::{fs::File, thread::sleep, time::Duration};
+
 /* STATIC IMAGES
 
 algorithm for static images work this way:
@@ -107,12 +109,7 @@ fn get_animated_frames(config: &Config, table: &[char]) -> Vec<String> {
     for frame in frames {
         // prolly this is not efficient, need to read image crate docs more!
         let img = DynamicImage::ImageRgba8(frame.buffer().clone());
-        let width = ((frame.buffer().width() / config.scale) / 2) as u32;
-        let height = ((frame.buffer().height() / config.scale) / 4) as u32;
-        let mut img = img
-            .resize_exact(width, height, image::imageops::FilterType::Lanczos3)
-            .to_rgba8();
-
+        let mut img = resize_image(img, &config);
         if config.dither {
             img.dither(config.dither_scale);
         }
