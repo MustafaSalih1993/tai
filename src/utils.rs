@@ -27,10 +27,8 @@ pub fn resize_image(img: DynamicImage, config: &Config) -> RgbaImage {
         }
         true => (img.width(), img.height()),
     };
-    let img = img
-        .resize(width, height, image::imageops::FilterType::Lanczos3)
-        .to_rgba8();
-    img
+    img.resize(width, height, image::imageops::FilterType::Lanczos3)
+        .to_rgba8()
 }
 
 // this will open the image path,

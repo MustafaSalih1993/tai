@@ -1,6 +1,6 @@
 [package]
 name = "tai"
-version = "0.0.3"
+version = "0.0.4"
 authors = ["Mustafa  <mustafasalih1991@gmail.com>"]
 edition = "2018"
 license = "MIT"
@@ -13,6 +13,4 @@ include = ["src/**/*", "README.md"]
 
 
 [dependencies]
-image = "0.23.13"
-#rayon = "1.5.0"
-
+image = "0.23.14"

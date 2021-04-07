@@ -40,8 +40,8 @@ fn get_char(img: &RgbaImage, config: &Config, table: &[char], x: u32, y: u32) ->
     let mut count = 0.0;
     for iy in y..y + 2 {
         for ix in x..x + 2 {
-            let [r, g, b, _] = img.get_pixel(ix, iy).0;
-            let lumi = get_luminance(r, g, b);
+            let [red, green, blue, _] = img.get_pixel(ix, iy).0;
+            let lumi = get_luminance(red, green, blue);
             sum += lumi;
             count += 1.0;
         }
@@ -49,8 +49,8 @@ fn get_char(img: &RgbaImage, config: &Config, table: &[char], x: u32, y: u32) ->
     let lumi_avg = sum / count;
     let cha = table[(lumi_avg / 255.0 * ((table.len() - 1) as f32)) as usize];
     let cha = if config.colored {
-        let [r, g, b, _] = img.get_pixel(x, y).0;
-        colorize(&[r, g, b], cha, config.background)
+        let [red, green, blue, _] = img.get_pixel(x, y).0;
+        colorize(&[red, green, blue], cha, config.background)
     } else {
         format!("{}", cha)
     };

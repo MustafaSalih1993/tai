@@ -1,6 +1,6 @@
 use crate::{utils::print_usage, Config, Style};
 
-const VERSION: &str = "0.0.3"; // program version
+const VERSION: &str = "0.0.4"; // program version
 
 pub fn parse(args: Vec<String>) -> Option<Config> {
     // defaults
@@ -158,7 +158,7 @@ fn check_style_arg(arg: &str) -> Style {
         "onechar" => Style::OneChar,
         _ => {
             eprintln!("Error: Unknown style. using defaults");
-            Style::Braille
+            Style::default()
         }
     }
 }
