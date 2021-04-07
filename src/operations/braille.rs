@@ -1,19 +1,8 @@
 use crate::arguments::config::Config;
 use crate::operations::dither::Dither;
 use crate::utils::*;
-use image::{gif::GifDecoder, AnimationDecoder, DynamicImage, GenericImageView, RgbaImage};
+use image::{gif::GifDecoder, AnimationDecoder, DynamicImage, RgbaImage};
 use std::{fs::File, thread::sleep, time::Duration};
-
-/* Image to braille:
-   source: https://en.wikipedia.org/wiki/Braille_Patterns
-
-- open the image
-- loop on the image buffer
-- collect a chunck of pixels (2*4)
-- calculate the chunck above and return a binary
-- parse the binary and turn it to a valid number
-- calculate the number and print a char based on it
-*/
 
 /* Image to braille:
    source: https://en.wikipedia.org/wiki/Braille_Patterns
@@ -37,13 +26,8 @@ pub fn img_to_braille(config: Config) {
         } else {
             return eprintln!("Image path is not correct, OR image format is not supported!");
         };
-        let width = ((img.width() / config.scale) / 2) as u32;
-        let height = ((img.height() / config.scale) / 4) as u32;
         // resizing the image and converting it to "imagebuffer",
-        // NOTE its required to be mut buffer so the floyed_dither function can modify it;
-        let mut img = img
-            .resize(width, height, image::imageops::FilterType::Lanczos3)
-            .to_rgba8();
+        let mut img = resize_image(img, &&config);
         // checking if the user wants to dither the image.
         if config.dither {
             img.dither(config.dither_scale);
@@ -155,11 +139,7 @@ fn get_animated_frames(config: &Config) -> Vec<String> {
     for frame in frames {
         // prolly this is not efficient, need to read image crate docs more!
         let img = DynamicImage::ImageRgba8(frame.buffer().clone());
-        let width = ((frame.buffer().width() / config.scale) / 2) as u32;
-        let height = ((frame.buffer().height() / config.scale) / 4) as u32;
-        let mut img = img
-            .resize(width, height, image::imageops::FilterType::Lanczos3)
-            .to_rgba8();
+        let mut img = resize_image(img, &config);
         if config.dither {
             img.dither(config.dither_scale);
         }

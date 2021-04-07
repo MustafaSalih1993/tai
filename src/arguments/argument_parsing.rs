@@ -1,20 +1,10 @@
 use crate::{utils::print_usage, Config, Style};
 
-const VERSION: &str = "0.0.3"; // program version
+const VERSION: &str = "0.0.4"; // program version
 
 pub fn parse(args: Vec<String>) -> Option<Config> {
     // defaults
-    let image_file: String;
-    let mut background: u8 = 38;
-    let mut colored: bool = false;
-    let mut dither: bool = false;
-    let mut onechar: char = '█';
-    let mut scale: u32 = 2;
-    let mut dither_scale: u8 = 16;
-    let mut sleep: u64 = 100;
-    let mut style: Style = Style::Braille;
-    let mut threshold: u8 = 128;
-    let mut table: Vec<char> = vec![];
+    let mut config = Config::default();
 
     if args.is_empty() {
         println!("try -h | --help option to show help!");
@@ -35,14 +25,15 @@ pub fn parse(args: Vec<String>) -> Option<Config> {
                     print_usage();
                     return None;
                 };
-                background = 48;
+
+                config.background = 48;
             }
             "--colored" => {
                 if _i == args.len() - 1 {
                     print_usage();
                     return None;
                 };
-                colored = true;
+                config.colored = true;
             }
 
             "-d" | "--dither" => {
@@ -50,7 +41,7 @@ pub fn parse(args: Vec<String>) -> Option<Config> {
                     print_usage();
                     return None;
                 };
-                dither = true;
+                config.dither = true;
                 _i += 1
             }
             "-D" | "--dither-scale" => {
@@ -59,21 +50,28 @@ pub fn parse(args: Vec<String>) -> Option<Config> {
                     return None;
                 };
                 let input = args[_i + 1].parse::<u8>();
-                dither_scale = if input.is_err() || input.unwrap() < 1 {
+                config.dither_scale = if input.is_err() || input.unwrap() < 1 {
                     eprintln!("Error: invalid dither-scale value. using defaults!");
-                    dither_scale
+                    config.dither_scale
                 } else {
-                    args[_i + 1].parse().unwrap_or(dither_scale)
+                    args[_i + 1].parse().unwrap_or(config.dither_scale)
                 };
                 _i += 1;
             }
-            "--onechar" => {
-                // modify the character when using the (--style onechar) flag;
+            "-N" | "--no-scale" => {
                 if _i == args.len() - 1 {
                     print_usage();
                     return None;
                 };
-                onechar = args[_i + 1].chars().next().unwrap();
+                config.original_size = true;
+                _i += 1
+            }
+            "--onechar" => {
+                if _i == args.len() - 1 {
+                    print_usage();
+                    return None;
+                };
+                config.onechar = args[_i + 1].chars().next().unwrap();
                 _i += 1
             }
             "-S" | "--style" => {
@@ -81,7 +79,7 @@ pub fn parse(args: Vec<String>) -> Option<Config> {
                     print_usage();
                     return None;
                 };
-                style = check_style_arg(&args[_i + 1]);
+                config.style = check_style_arg(&args[_i + 1]);
                 _i += 1
             }
             "--sleep" => {
@@ -90,7 +88,7 @@ pub fn parse(args: Vec<String>) -> Option<Config> {
                     return None;
                 };
 
-                sleep = args[_i + 1].parse().unwrap_or(sleep);
+                config.sleep = args[_i + 1].parse().unwrap_or(config.sleep);
                 _i += 1
             }
             "-s" | "--scale" => {
@@ -99,11 +97,11 @@ pub fn parse(args: Vec<String>) -> Option<Config> {
                     return None;
                 };
                 let input = args[_i + 1].parse::<u32>();
-                scale = if input.is_err() || input.unwrap() < 1 {
+                config.scale = if input.is_err() || input.unwrap() < 1 {
                     eprintln!("Error: invalid scale number using defaults!");
-                    scale
+                    config.scale
                 } else {
-                    args[_i + 1].parse().unwrap_or(scale)
+                    args[_i + 1].parse().unwrap_or(config.scale)
                 };
                 _i += 1;
             }
@@ -113,7 +111,7 @@ pub fn parse(args: Vec<String>) -> Option<Config> {
                     print_usage();
                     return None;
                 };
-                threshold = args[_i + 1].parse().unwrap_or(threshold);
+                config.threshold = args[_i + 1].parse().unwrap_or(config.threshold);
                 _i += 1
             }
             "--table" => {
@@ -122,7 +120,7 @@ pub fn parse(args: Vec<String>) -> Option<Config> {
                     print_usage();
                     return None;
                 };
-                table = args[_i + 1]
+                config.table = args[_i + 1]
                     .parse::<String>()
                     .unwrap_or_else(|_| "".to_string())
                     .split(',')
@@ -146,22 +144,9 @@ pub fn parse(args: Vec<String>) -> Option<Config> {
         return None;
     };
 
-    image_file = args.into_iter().last().unwrap();
+    config.image_file = args.into_iter().last().unwrap();
 
-    //returning
-    Some(Config {
-        background,
-        colored,
-        dither,
-        dither_scale,
-        image_file,
-        onechar,
-        scale,
-        sleep,
-        style,
-        threshold,
-        table,
-    })
+    Some(config)
 }
 
 fn check_style_arg(arg: &str) -> Style {
@@ -173,7 +158,7 @@ fn check_style_arg(arg: &str) -> Style {
         "onechar" => Style::OneChar,
         _ => {
             eprintln!("Error: Unknown style. using defaults");
-            Style::Braille
+            Style::default()
         }
     }
 }

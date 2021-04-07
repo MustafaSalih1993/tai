@@ -1,8 +1,10 @@
 use crate::arguments::config::Config;
 use crate::operations::dither::Dither;
+use crate::utils::resize_image;
 use crate::utils::{colorize, get_luminance, process_image};
 use image::{gif::GifDecoder, AnimationDecoder, DynamicImage, RgbaImage};
 use std::{fs::File, thread::sleep, time::Duration};
+
 /* STATIC IMAGES
 
 algorithm for static images work this way:
@@ -38,8 +40,8 @@ fn get_char(img: &RgbaImage, config: &Config, table: &[char], x: u32, y: u32) ->
     let mut count = 0.0;
     for iy in y..y + 2 {
         for ix in x..x + 2 {
-            let [r, g, b, _] = img.get_pixel(ix, iy).0;
-            let lumi = get_luminance(r, g, b);
+            let [red, green, blue, _] = img.get_pixel(ix, iy).0;
+            let lumi = get_luminance(red, green, blue);
             sum += lumi;
             count += 1.0;
         }
@@ -47,8 +49,8 @@ fn get_char(img: &RgbaImage, config: &Config, table: &[char], x: u32, y: u32) ->
     let lumi_avg = sum / count;
     let cha = table[(lumi_avg / 255.0 * ((table.len() - 1) as f32)) as usize];
     let cha = if config.colored {
-        let [r, g, b, _] = img.get_pixel(x, y).0;
-        colorize(&[r, g, b], cha, config.background)
+        let [red, green, blue, _] = img.get_pixel(x, y).0;
+        colorize(&[red, green, blue], cha, config.background)
     } else {
         format!("{}", cha)
     };
@@ -107,12 +109,7 @@ fn get_animated_frames(config: &Config, table: &[char]) -> Vec<String> {
     for frame in frames {
         // prolly this is not efficient, need to read image crate docs more!
         let img = DynamicImage::ImageRgba8(frame.buffer().clone());
-        let width = ((frame.buffer().width() / config.scale) / 2) as u32;
-        let height = ((frame.buffer().height() / config.scale) / 4) as u32;
-        let mut img = img
-            .resize_exact(width, height, image::imageops::FilterType::Lanczos3)
-            .to_rgba8();
-
+        let mut img = resize_image(img, &config);
         if config.dither {
             img.dither(config.dither_scale);
         }

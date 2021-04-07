@@ -28,8 +28,8 @@ fn main() {
         Style::Ascii => {
             let table = if config.table.is_empty() {
                 vec![
-                    ' ', ' ', ' ', '.', '.', '.', ',', ',', ',', '\'', ';', ':', '<', '>', 'l',
-                    'o', 'b', 'd', 'x', 'k', 'O', '0', 'K', 'X', 'N', 'W', 'M',
+                    ' ', ' ', ' ', ' ', '.', '.', '.', ',', ',', ',', '\'', ';', ':', '<', '>',
+                    'l', 'o', 'b', 'd', 'x', 'k', 'O', '0', 'K', 'X', 'N', 'W', 'M',
                 ]
             } else {
                 config.table.clone()
@@ -38,12 +38,12 @@ fn main() {
         }
         Style::Numbers => {
             let table = vec![
-                ' ', ' ', ' ', ' ', ' ', '0', '1', '7', '6', '9', '4', '2', '3', '8',
+                ' ', ' ', ' ', ' ', '0', '1', '7', '6', '9', '4', '2', '3', '8',
             ];
             img_to_ascii(config, &table);
         }
         Style::Blocks => {
-            let table = vec![' ', '░', '▒', '▓', '█'];
+            let table = vec![' ', ' ', ' ', ' ', '░', '▒', '▓', '█'];
             img_to_ascii(config, &table);
         }
     };
