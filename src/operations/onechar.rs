@@ -1,37 +1,30 @@
 use crate::arguments::config::Config;
-use crate::utils::{get_luminance, process_image};
+use crate::operations::otsu_threshold::OtsuThreshold;
+use crate::utils::get_luma_buffer;
+use image::Luma;
 
 //  will make the image to ONLY black and white
 //  by converting the the "grays" to black or white based on the scale.
 // source: https://en.wikipedia.org/wiki/Thresholding_(image_processing)
-
+// below we are using Otsu's thresholding which is automatically finds
+// the best threshold value
+// https://en.wikipedia.org/wiki/Otsu%27s_method
 pub fn img_to_onechar(config: Config) {
-    let mut img = match process_image(&config) {
+    let mut img: image::ImageBuffer<image::Luma<u8>, Vec<u8>> = match get_luma_buffer(&config) {
         Some(img) => img,
         None => return,
     };
+    img.threshold();
     for y in 0..img.height() {
         for x in 0..img.width() {
-            let mut pixel = img.get_pixel_mut(x, y).0;
-            threshold_pixel(&mut pixel, config.threshold);
-            if get_luminance(pixel[0], pixel[1], pixel[2]) > 128.0 {
-                print!("{}", config.onechar) //■
+            let pixel = img.get_pixel(x, y);
+            if *pixel == Luma([255]) {
+                print!("{}", config.onechar);
             } else {
-                print!(" ")
-            };
+                print!(" ");
+            }
         }
         println!();
     }
     println!();
-}
-// modify pixel values
-fn threshold_pixel(pixel: &mut [u8; 4], scale: u8) {
-    let mut scale = scale;
-    for val in pixel.iter_mut().take(3) {
-        if val < &mut scale {
-            *val = 0;
-        } else {
-            *val = 255;
-        }
-    }
 }
