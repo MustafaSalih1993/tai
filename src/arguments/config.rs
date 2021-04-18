@@ -25,7 +25,6 @@ pub struct Config {
     pub scale: u32,
     pub sleep: u64,
     pub style: Style,
-    pub threshold: u8,
     pub table: Vec<char>,
 }
 
@@ -48,7 +47,6 @@ impl Default for Config {
             scale: 2,
             sleep: 100,
             style: Style::default(),
-            threshold: 128,
             table: vec![],
         }
     }

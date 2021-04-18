@@ -1,9 +1,16 @@
 use crate::arguments::config::Config;
 use crate::operations::dither::Dither;
 use crate::utils::resize_image;
-use crate::utils::{colorize, get_luminance, process_image};
+use crate::utils::{colorize, process_image};
 use image::{gif::GifDecoder, AnimationDecoder, DynamicImage, RgbaImage};
 use std::{fs::File, thread::sleep, time::Duration};
+
+fn get_luminance(r: u8, g: u8, b: u8) -> f32 {
+    let r = 0.2126 * (r as f32);
+    let g = 0.7152 * (g as f32);
+    let b = 0.0722 * (b as f32);
+    r + g + b
+}
 
 /* STATIC IMAGES
 

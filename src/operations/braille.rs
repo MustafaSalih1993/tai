@@ -4,6 +4,8 @@ use crate::utils::*;
 use image::{gif::GifDecoder, AnimationDecoder, DynamicImage, RgbaImage};
 use std::{fs::File, thread::sleep, time::Duration};
 
+use super::otsu_threshold::OtsuThreshold;
+
 /* Image to braille:
    source: https://en.wikipedia.org/wiki/Braille_Patterns
 
@@ -96,9 +98,13 @@ fn translate(map: &mut [[u8; 2]; 4]) -> char {
 
 // process a static image
 fn print_static(img: &RgbaImage, config: &Config) {
+    let best_threshold = DynamicImage::ImageRgba8(img.clone())
+        .into_luma8()
+        .get_otsu_value();
+
     for y in (0..img.height() - 4).step_by(4) {
         for x in (0..img.width() - 2).step_by(2) {
-            let mut map = get_block_signals(config.threshold, &img, x, y);
+            let mut map = get_block_signals(best_threshold, &img, x, y);
             let ch = translate(&mut map);
             if config.colored {
                 let [r, g, b, _] = img.get_pixel(x, y).0;
@@ -153,9 +159,13 @@ fn get_animated_frames(config: &Config) -> Vec<String> {
 
 fn translate_frame(img: &RgbaImage, config: &Config) -> String {
     let mut out = String::new();
+    let best_threshold = DynamicImage::ImageRgba8(img.clone())
+        .into_luma8()
+        .get_otsu_value();
+
     for y in (0..img.height() - 4).step_by(4) {
         for x in (0..img.width() - 2).step_by(2) {
-            let mut map = get_block_signals(config.threshold, &img, x, y);
+            let mut map = get_block_signals(best_threshold, &img, x, y);
             let ch = translate(&mut map);
 
             if config.colored {
