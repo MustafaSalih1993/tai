@@ -1,6 +1,6 @@
 use crate::{utils::print_usage, Config, Style};
 
-const VERSION: &str = "0.0.4"; // program version
+const VERSION: &str = "0.0.5"; // program version
 
 pub fn parse(args: Vec<String>) -> Option<Config> {
     // defaults
@@ -104,15 +104,6 @@ pub fn parse(args: Vec<String>) -> Option<Config> {
                     args[_i + 1].parse().unwrap_or(config.scale)
                 };
                 _i += 1;
-            }
-            "-t" | "--threshold" => {
-                // threshold
-                if _i == args.len() - 1 {
-                    print_usage();
-                    return None;
-                };
-                config.threshold = args[_i + 1].parse().unwrap_or(config.threshold);
-                _i += 1
             }
             "--table" => {
                 // custom ascii table
