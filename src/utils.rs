@@ -15,14 +15,39 @@ pub fn get_luminance(r: u8, g: u8, b: u8) -> f32 {
     r + g + b
 }
 
-// colorize a character
+// colorize a character by surrounding it with true  term colors
 pub fn colorize(rgb: &[u8; 3], ch: char, bg_fg: u8) -> String {
     let prefix = format!("\x1B[{};2;{};{};{}m", bg_fg, rgb[0], rgb[1], rgb[2]);
     let postfix = "\x1B[0m";
     format!("{}{}{}", prefix, ch, postfix)
 }
 
-pub fn resize_image(img: DynamicImage, config: &Config) -> RgbaImage {
+//rescale the image and convert to image buffer
+pub fn open_and_resize(config: &Config) -> Option<RgbaImage> {
+    let img = if let Ok(image) = image::open(&config.image_file) {
+        image
+    } else {
+        eprintln!("Image path is not correct, OR image format is not supported!");
+        return None;
+    };
+    let width = match config.original_size {
+        true => img.width(),
+        false => ((img.width() / config.scale) / 2) as u32,
+    };
+    let height = match config.original_size {
+        true => img.height(),
+        false => ((img.height() / config.scale) / 4) as u32,
+    };
+    let img = img.resize_exact(width, height, image::imageops::FilterType::Lanczos3);
+    let img = if config.colored {
+        img.into_rgba8()
+    } else {
+        img.grayscale().into_rgba8()
+    };
+    Some(img)
+}
+
+pub fn resize(img: DynamicImage, config: &Config) -> RgbaImage {
     let (width, height) = match config.original_size {
         false => {
             let width = ((img.width() / config.scale) / 2) as u32;
@@ -57,32 +82,6 @@ pub fn get_luma_buffer(config: &Config) -> Option<GrayImage> {
     Some(img)
 }
 
-// this will open the image path,
-// and resize the image and turn it into image buffer;
-pub fn process_image(config: &Config) -> Option<RgbaImage> {
-    let img = if let Ok(image) = image::open(&config.image_file) {
-        image
-    } else {
-        eprintln!("Image path is not correct, OR image format is not supported!");
-        return None;
-    };
-    let width = match config.original_size {
-        true => img.width(),
-        false => ((img.width() / config.scale) / 2) as u32,
-    };
-    let height = match config.original_size {
-        true => img.height(),
-        false => ((img.height() / config.scale) / 4) as u32,
-    };
-    let img = img.resize_exact(width, height, image::imageops::FilterType::Lanczos3);
-    let img = if config.colored {
-        img.into_rgba8()
-    } else {
-        img.grayscale().into_rgba8()
-    };
-    Some(img)
-}
-
 // program help message
 pub fn print_usage() {
     println!("USAGE: tai [OPTIONS] [IMAGE_FILE]");
@@ -93,8 +92,6 @@ pub fn print_usage() {
     println!("\t -D | --dither-scale\t used with \"-d\" option, controls the scale number for the dithering, default to 16");
     println!("\t -N | --no-scale\t will keep the original size of the image, default to false");
     println!("\t -s | --size\t\t Followed by a number to Resize the output (lower number means bigger output) default to 2");
-    println!("\t -t | --threshold\t Followed by a number (between 1 255) to select the threshold value,\n\
-\t\t\t\t default to 128");
     println!(
         "\t -S | --style\t\t Followed by one of: {{ascii, numbers, blocks, onechar, braille}}, default to \"braille\""
     );

@@ -6,8 +6,10 @@ use arguments::config::{Config, Style};
 use operations::{ascii::img_to_ascii, braille::img_to_braille, onechar::img_to_onechar};
 use std::env;
 
-// TODO: need better naming for functions and variables, it's sucks because
+// TODO1: need better naming for functions and variables, it's sucks because
 //       im not a native English speaker.
+
+// TODO2: add the first 4 spaces in the tables below by default
 
 fn main() {
     let mut args = env::args();

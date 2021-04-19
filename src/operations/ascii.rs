@@ -1,16 +1,8 @@
 use crate::arguments::config::Config;
 use crate::operations::dither::Dither;
-use crate::utils::resize_image;
-use crate::utils::{colorize, process_image};
+use crate::utils::{colorize, get_luminance, open_and_resize, resize};
 use image::{gif::GifDecoder, AnimationDecoder, DynamicImage, RgbaImage};
 use std::{fs::File, thread::sleep, time::Duration};
-
-fn get_luminance(r: u8, g: u8, b: u8) -> f32 {
-    let r = 0.2126 * (r as f32);
-    let g = 0.7152 * (g as f32);
-    let b = 0.0722 * (b as f32);
-    r + g + b
-}
 
 /* STATIC IMAGES
 
@@ -32,7 +24,6 @@ algorithm for animated images work this way:
 */
 
 // img_to_ascii converts to ascii,numbers,blocks
-
 pub fn img_to_ascii(config: Config, table: &[char]) {
     if config.image_file.ends_with(".gif") {
         print_animated_image(&config, table);
@@ -63,9 +54,9 @@ fn get_char(img: &RgbaImage, config: &Config, table: &[char], x: u32, y: u32) ->
     };
     cha
 }
-
+// process a static image
 fn print_static_image(config: &Config, table: &[char]) {
-    let mut img = match process_image(config) {
+    let mut img = match open_and_resize(config) {
         Some(img) => img,
         None => return,
     };
@@ -116,7 +107,7 @@ fn get_animated_frames(config: &Config, table: &[char]) -> Vec<String> {
     for frame in frames {
         // prolly this is not efficient, need to read image crate docs more!
         let img = DynamicImage::ImageRgba8(frame.buffer().clone());
-        let mut img = resize_image(img, &config);
+        let mut img = resize(img, &config);
         if config.dither {
             img.dither(config.dither_scale);
         }

@@ -1,6 +1,6 @@
 use crate::{utils::print_usage, Config, Style};
 
-const VERSION: &str = "0.0.4"; // program version
+const VERSION: &str = "0.0.5"; // program version
 
 pub fn parse(args: Vec<String>) -> Option<Config> {
     // defaults

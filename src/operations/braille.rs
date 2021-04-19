@@ -29,7 +29,7 @@ pub fn img_to_braille(config: Config) {
             return eprintln!("Image path is not correct, OR image format is not supported!");
         };
         // resizing the image and converting it to "imagebuffer",
-        let mut img = resize_image(img, &&config);
+        let mut img = resize(img, &&config);
         // checking if the user wants to dither the image.
         if config.dither {
             img.dither(config.dither_scale);
@@ -145,7 +145,7 @@ fn get_animated_frames(config: &Config) -> Vec<String> {
     for frame in frames {
         // prolly this is not efficient, need to read image crate docs more!
         let img = DynamicImage::ImageRgba8(frame.buffer().clone());
-        let mut img = resize_image(img, &config);
+        let mut img = resize(img, &config);
         if config.dither {
             img.dither(config.dither_scale);
         }
