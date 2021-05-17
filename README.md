@@ -16,8 +16,7 @@ You can install the binary crate directly
 ```sh
 cargo install tai
 ```
-
-#### Gentoo Users:
+#### Gentoo Linux:
 **tai** is available in **GURU**
 ```sh
 emerge -av app-misc/tai
@@ -25,6 +24,11 @@ emerge -av app-misc/tai
 ##### local ebuilds
 local ebuilds can be found [HERE](https://github.com/MustafaSalih1993/tai-ebuilds) to add it in your local overlay.
 </br>
+#### Arch Linux:
+**[tai-git](https://aur.archlinux.org/packages/tai-git)** (a community package) is available in Arch Linux's **AUR**
+```sh
+yay/paru -S tai-git
+```
 #### Manual Installation:
 you can clone **tai** repo and build it locally
 ```sh
