@@ -1,8 +1,4 @@
 use crate::arguments::argument_parsing;
-/* TODO:
- - Better argument parsing
- - Implement Defaults to Style
-*/
 
 #[derive(Debug)]
 pub enum Style {

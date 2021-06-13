@@ -1,6 +1,6 @@
 [package]
 name = "tai"
-version = "0.0.5"
+version = "0.0.6"
 authors = ["Mustafa  <mustafasalih1991@gmail.com>"]
 edition = "2018"
 license = "MIT"
