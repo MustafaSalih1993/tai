@@ -9,17 +9,16 @@ use std::env;
 // TODO1: need better naming for functions and variables, it's sucks because
 //       im not a native English speaker.
 
-// TODO2: add the first 4 spaces in the tables below by default
-
 fn main() {
     let mut args = env::args();
+
     // parse args and return a valid config with defaults
     let config = match Config::new(&mut args) {
         Some(val) => val,
         None => return,
     };
-    // matching the style givin to decide which operation to apply.
 
+    // matching the style givin to decide which operation to apply.
     match config.style {
         Style::OneChar => {
             img_to_onechar(config);

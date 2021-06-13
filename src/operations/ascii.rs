@@ -113,7 +113,7 @@ fn get_animated_frames(config: &Config, table: &[char]) -> Vec<String> {
         }
 
         let translated_frame = translate_frame(&img, &config, table);
-        // this code will seek/save the cursor position to the start of the art
+        // this code -> \x1B[r <- will seek/save the cursor position to the start of the art
         // read about control characters: https://en.wikipedia.org/wiki/Control_character
         // so for each frame will override the old one in stdout
         out_frames.push(format!("\x1B[r{}", translated_frame));

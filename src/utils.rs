@@ -1,10 +1,6 @@
 use crate::arguments::config::Config;
 use image::{DynamicImage, GenericImageView, GrayImage, RgbaImage};
 
-/*
-   TODO: CLEAN UP NEEDED THIS IS DISGUSTING
-*/
-
 // luminance formula credits: https://stackoverflow.com/a/596243
 // >>> Luminance = 0.2126*R + 0.7152*G + 0.0722*B <<<
 // calculate RGB values to get luminance of the pixel
