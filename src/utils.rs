@@ -87,7 +87,7 @@ pub fn print_usage() {
     println!("\t -d | --dither\t\t enables image dithering");
     println!("\t -D | --dither-scale\t used with \"-d\" option, controls the scale number for the dithering, default to 16");
     println!("\t -N | --no-scale\t will keep the original size of the image, default to false");
-    println!("\t -s | --size\t\t Followed by a number to Resize the output (lower number means bigger output) default to 2");
+    println!("\t -s | --scale\t\t Followed by a number to Resize the output (lower number means bigger output) default to 2");
     println!(
         "\t -S | --style\t\t Followed by one of: {{ascii, numbers, blocks, onechar, braille}}, default to \"braille\""
     );
