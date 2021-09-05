@@ -22,6 +22,7 @@ pub struct Config {
     pub sleep: u64,
     pub style: Style,
     pub table: Vec<char>,
+    pub once: bool,
 }
 
 impl Default for Style {
@@ -44,6 +45,7 @@ impl Default for Config {
             sleep: 100,
             style: Style::default(),
             table: vec![],
+            once: false,
         }
     }
 }

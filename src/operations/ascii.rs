@@ -75,14 +75,22 @@ fn print_static_image(config: &Config, table: &[char]) {
     println!();
 }
 
+fn loop_the_animation(config: &Config, frames: &Vec<String>) {
+    for frame in frames {
+        print!("{}", frame);
+        sleep(Duration::from_millis(config.sleep))
+    }
+}
+
 // this function will loop into frames converted to ascii
 // and sleep between each frame
 fn print_animated_image(config: &Config, table: &[char]) {
     let frames = get_animated_frames(config, table);
-    loop {
-        for frame in &frames {
-            print!("{}", frame);
-            sleep(Duration::from_millis(config.sleep))
+    if config.once {
+        loop_the_animation(config, &frames);
+    } else {
+        loop {
+            loop_the_animation(config, &frames);
         }
     }
 }

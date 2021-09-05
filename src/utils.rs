@@ -92,6 +92,7 @@ pub fn print_usage() {
         "\t -S | --style\t\t Followed by one of: {{ascii, numbers, blocks, onechar, braille}}, default to \"braille\""
     );
     println!("\t      --onechar\t\t Followed by a character, This will modify the default character used by (-S onechar)\n");
+    println!("\t      --once\t\t Will play the image's animation only once (no looping)\n");
     println!("\t      --colored\t\t Will return true colored(RGB) art. ");
     println!("\t      --background\t Will apply the colors on the \"background\" of the characters instead of coloring the foreground.");
     println!("\t      --sleep\t\t Followed by number, controls the sleep delay(milli seconds) between animation frames. default to 100");
