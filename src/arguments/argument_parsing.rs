@@ -74,6 +74,14 @@ pub fn parse(args: Vec<String>) -> Option<Config> {
                 config.onechar = args[_i + 1].chars().next().unwrap();
                 _i += 1
             }
+            "--once" => {
+                if _i == args.len() - 1 {
+                    print_usage();
+                    return None;
+                };
+                config.once = true;
+                _i += 1
+            }
             "-S" | "--style" => {
                 if _i == args.len() - 1 {
                     print_usage();

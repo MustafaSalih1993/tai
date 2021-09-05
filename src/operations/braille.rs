@@ -117,13 +117,21 @@ fn print_static(img: &RgbaImage, config: &Config) {
     }
 }
 
+fn loop_the_animation(config: &Config, frames: &Vec<String>) {
+    for frame in frames {
+        print!("{}", frame);
+        sleep(Duration::from_millis(config.sleep))
+    }
+}
+
 // process animated image
 fn print_animated_image(config: &Config) {
     let frames = get_animated_frames(&config);
-    loop {
-        for frame in &frames {
-            print!("{}", frame);
-            sleep(Duration::from_millis(config.sleep))
+    if config.once {
+        loop_the_animation(config, &frames);
+    } else {
+        loop {
+            loop_the_animation(config, &frames);
         }
     }
 }

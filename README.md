@@ -2,7 +2,7 @@
 [<img alt="crates" src="https://img.shields.io/crates/v/tai?logo=rust&logoColor=a9b1d6&style=flat-square&color=fc8d62" height="20">](https://crates.io/crates/tai)
 
 # TAI
-Terminal Ascii Image
+Terminal Ascii Images
 
 A tool to convert images to ascii art written in **Rust** 🦀
 
