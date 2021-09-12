@@ -1,12 +1,12 @@
 [package]
 name = "tai"
-version = "0.0.7"
+version = "0.0.8"
 authors = ["Mustafa  <mustafasalih1991@gmail.com>"]
 edition = "2018"
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/MustafaSalih1993/tai"
-description = "tai (Terminal Ascii Image) tool to convert images to ascii"
+description = "tai (Terminal Ascii Images) tool to convert images to ascii"
 keywords = ["cli","graphics","terminal"]
 categories = ["command-line-utilities","graphics"]
 include = ["src/**/*", "README.md"]
@@ -14,3 +14,4 @@ include = ["src/**/*", "README.md"]
 
 [dependencies]
 image = "0.23.14"
+getopts = "0.2"

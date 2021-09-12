@@ -23,7 +23,7 @@ pub fn open_and_resize(config: &Config) -> Option<RgbaImage> {
     let img = if let Ok(image) = image::open(&config.image_file) {
         image
     } else {
-        eprintln!("Image path is not correct, OR image format is not supported!");
+        eprintln!("Image path is not correct, OR image format is not supported!\n try -h | --help");
         return None;
     };
     let width = match config.original_size {
@@ -62,7 +62,7 @@ pub fn get_luma_buffer(config: &Config) -> Option<GrayImage> {
     let img = if let Ok(image) = image::open(&config.image_file) {
         image
     } else {
-        eprintln!("Image path is not correct, OR image format is not supported!");
+        eprintln!("Image path is not correct, OR image format is not supported!\n try -h | --help");
         return None;
     };
     let width = match config.original_size {
@@ -76,27 +76,4 @@ pub fn get_luma_buffer(config: &Config) -> Option<GrayImage> {
     let img = img.resize_exact(width, height, image::imageops::FilterType::Lanczos3);
     let img = img.to_luma8();
     Some(img)
-}
-
-// program help message
-pub fn print_usage() {
-    println!("USAGE: tai [OPTIONS] [IMAGE_FILE]");
-    println!();
-    println!("OPTIONS: ");
-    println!("\t -h | --help\t\t Show this help message");
-    println!("\t -d | --dither\t\t enables image dithering");
-    println!("\t -D | --dither-scale\t used with \"-d\" option, controls the scale number for the dithering, default to 16");
-    println!("\t -N | --no-scale\t will keep the original size of the image, default to false");
-    println!("\t -s | --scale\t\t Followed by a number to Resize the output (lower number means bigger output) default to 2");
-    println!(
-        "\t -S | --style\t\t Followed by one of: {{ascii, numbers, blocks, onechar, braille}}, default to \"braille\""
-    );
-    println!("\t      --onechar\t\t Followed by a character, This will modify the default character used by (-S onechar)\n");
-    println!("\t      --once\t\t Will play the image's animation only once (no looping)\n");
-    println!("\t      --colored\t\t Will return true colored(RGB) art. ");
-    println!("\t      --background\t Will apply the colors on the \"background\" of the characters instead of coloring the foreground.");
-    println!("\t      --sleep\t\t Followed by number, controls the sleep delay(milli seconds) between animation frames. default to 100");
-    println!("\t      --table\t\t Make a custom ascii table,(works only with \"ascii\" Style) seperated by ','\n\
-\t\t\t\t ex: tai -S ascii --table \" ,.,:,x,@\" image.png");
-    println!("\t -v | --version\t\t Print tai's Version and exit!.");
 }

@@ -75,7 +75,7 @@ fn print_static_image(config: &Config, table: &[char]) {
     println!();
 }
 
-fn loop_the_animation(config: &Config, frames: &Vec<String>) {
+fn loop_the_animation(config: &Config, frames: &[String]) {
     for frame in frames {
         print!("{}", frame);
         sleep(Duration::from_millis(config.sleep))
@@ -115,12 +115,12 @@ fn get_animated_frames(config: &Config, table: &[char]) -> Vec<String> {
     for frame in frames {
         // prolly this is not efficient, need to read image crate docs more!
         let img = DynamicImage::ImageRgba8(frame.buffer().clone());
-        let mut img = resize(img, &config);
+        let mut img = resize(img, config);
         if config.dither {
             img.dither(config.dither_scale);
         }
 
-        let translated_frame = translate_frame(&img, &config, table);
+        let translated_frame = translate_frame(&img, config, table);
         // this code -> \x1B[r <- will seek/save the cursor position to the start of the art
         // read about control characters: https://en.wikipedia.org/wiki/Control_character
         // so for each frame will override the old one in stdout
@@ -134,7 +134,7 @@ fn translate_frame(img: &RgbaImage, config: &Config, table: &[char]) -> String {
     let mut out = String::new();
     for y in (0..img.height() - 2).step_by(2) {
         for x in (0..img.width() - 2).step_by(2) {
-            let cha = get_char(&img, config, table, x, y);
+            let cha = get_char(img, config, table, x, y);
             out.push_str(&cha);
         }
         out.push('\n');
