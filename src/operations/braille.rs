@@ -26,10 +26,12 @@ pub fn img_to_braille(config: Config) {
         let img = if let Ok(image) = image::open(&config.image_file) {
             image
         } else {
-            return eprintln!("Image path is not correct, OR image format is not supported!");
+            return eprintln!(
+                "Image path is not correct, OR image format is not supported!\n try -h | --help"
+            );
         };
         // resizing the image and converting it to "imagebuffer",
-        let mut img = resize(img, &&config);
+        let mut img = resize(img, &config);
         // checking if the user wants to dither the image.
         if config.dither {
             img.dither(config.dither_scale);
@@ -104,7 +106,7 @@ fn print_static(img: &RgbaImage, config: &Config) {
 
     for y in (0..img.height() - 4).step_by(4) {
         for x in (0..img.width() - 2).step_by(2) {
-            let mut map = get_block_signals(best_threshold, &img, x, y);
+            let mut map = get_block_signals(best_threshold, img, x, y);
             let ch = translate(&mut map);
             if config.colored {
                 let [r, g, b, _] = img.get_pixel(x, y).0;
@@ -117,7 +119,7 @@ fn print_static(img: &RgbaImage, config: &Config) {
     }
 }
 
-fn loop_the_animation(config: &Config, frames: &Vec<String>) {
+fn loop_the_animation(config: &Config, frames: &[String]) {
     for frame in frames {
         print!("{}", frame);
         sleep(Duration::from_millis(config.sleep))
@@ -126,7 +128,7 @@ fn loop_the_animation(config: &Config, frames: &Vec<String>) {
 
 // process animated image
 fn print_animated_image(config: &Config) {
-    let frames = get_animated_frames(&config);
+    let frames = get_animated_frames(config);
     if config.once {
         loop_the_animation(config, &frames);
     } else {
@@ -153,11 +155,11 @@ fn get_animated_frames(config: &Config) -> Vec<String> {
     for frame in frames {
         // prolly this is not efficient, need to read image crate docs more!
         let img = DynamicImage::ImageRgba8(frame.buffer().clone());
-        let mut img = resize(img, &config);
+        let mut img = resize(img, config);
         if config.dither {
             img.dither(config.dither_scale);
         }
-        let translated_frame = translate_frame(&img, &config);
+        let translated_frame = translate_frame(&img, config);
         // this ansi code will seek/save the cursor position to the start of the art
         // so for each frame will override the old one in stdout
         out_frames.push(format!("\x1B[r{}", translated_frame));
@@ -173,7 +175,7 @@ fn translate_frame(img: &RgbaImage, config: &Config) -> String {
 
     for y in (0..img.height() - 4).step_by(4) {
         for x in (0..img.width() - 2).step_by(2) {
-            let mut map = get_block_signals(best_threshold, &img, x, y);
+            let mut map = get_block_signals(best_threshold, img, x, y);
             let ch = translate(&mut map);
 
             if config.colored {

@@ -53,11 +53,8 @@ impl Default for Config {
 impl Config {
     // Parsing arguments and return a valid config
     pub fn new(args: &mut std::env::Args) -> Option<Self> {
-        // getting rid of the first arg (program name)
-        args.next().unwrap();
-        // converting from iterator to vector (to access the indexes).
+        // converting from iterator to vector.
         let args: Vec<String> = args.collect();
-
         argument_parsing::parse(args)
     }
 }

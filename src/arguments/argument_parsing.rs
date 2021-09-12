@@ -1,149 +1,152 @@
-use crate::{utils::print_usage, Config, Style};
-
-const VERSION: &str = "0.0.5"; // program version
+use crate::{Config, Style};
+use getopts::Options;
+const VERSION: &str = "0.0.8"; // program version
 
 pub fn parse(args: Vec<String>) -> Option<Config> {
     // defaults
     let mut config = Config::default();
+    let program = args[0].clone();
+    let mut opts = Options::new();
+    opts.optflag("h", "help", "Show this help message");
+    opts.optflag("b","background","Will apply the colors on the \"background\" of the characters instead of coloring the foreground");
+    opts.optflag("c", "colored", "Will return true colored(RGB) art");
+    opts.optflag("d", "dither", "enables image dithering");
+    opts.optopt(
+        "o",
+        "onechar",
+        "Followed by a character, This will modify the default character used by (-S onechar)",
+        "CHARACTER",
+    );
+    opts.optflag(
+        "N",
+        "no-scale",
+        "will keep the original size of the image, default to false",
+    );
+    opts.optopt(
+        "D",
+        "dither-scale",
+        "used with \"-d\" option, controls the scale number for the dithering, default to 16",
+        "NUMBER",
+    );
+    opts.optflag(
+        "O",
+        "once",
+        "Will play the image's animation only once (no looping)",
+    );
+    opts.optopt(
+        "S",
+        "style",
+        "Followed by one of: {{ascii, numbers, blocks, onechar, braille}}, default to \"braille\"",
+        "STYLE",
+    );
+    opts.optopt("","sleep","Followed by number, controls the sleep delay(milli seconds) between animation frames. default to 100","MILLI_SECONDS");
+    opts.optopt(
+        "s",
+        "scale",
+        "Followed by a number to Resize the output (lower number means bigger output) default to 2",
+        "NUMBER",
+    );
+    opts.optopt(
+        "t",
+        "table",
+        "Make a custom ascii table,(works only with \"ascii\" Style) seperated by ','\n\
+                            \t\t\t\t ex: tai -S ascii --table \" ,.,:,x,@\" image.png",
+        "TABLE_OF_CHARACTERS",
+    );
+    opts.optflag("v", "version", "Print tai's Version and exit!");
 
-    if args.is_empty() {
-        println!("try -h | --help option to show help!");
+    let matches = match opts.parse(&args[1..]) {
+        Ok(m) => m,
+        Err(f) => std::panic::panic_any(f.to_string()),
+    };
+
+    if matches.opt_present("h") {
+        print!(
+            "{}",
+            opts.usage(&format!("USAGE: {} [Options] IMAGE", program))
+        );
         return None;
     }
-    // loop on every argument givin
-    for mut _i in 0..args.len() {
-        match args[_i].as_str() {
-            "-h" | "--help" => {
-                // show help.
-                print_usage();
-                return None;
-            }
-            // 48==applying the color on the background of the char,
-            // 38(default)==applying the color on the foreground.
-            "--background" => {
-                if _i == args.len() - 1 {
-                    print_usage();
-                    return None;
-                };
 
-                config.background = 48;
-            }
-            "--colored" => {
-                if _i == args.len() - 1 {
-                    print_usage();
-                    return None;
-                };
-                config.colored = true;
-            }
+    if matches.opt_present("v") {
+        println!("{} v{}", program, VERSION);
+        return None;
+    }
 
-            "-d" | "--dither" => {
-                if _i == args.len() - 1 {
-                    print_usage();
-                    return None;
-                };
-                config.dither = true;
-                _i += 1
-            }
-            "-D" | "--dither-scale" => {
-                if _i == args.len() - 1 {
-                    print_usage();
-                    return None;
-                };
-                let input = args[_i + 1].parse::<u8>();
-                config.dither_scale = if input.is_err() || input.unwrap() < 1 {
-                    eprintln!("Error: invalid dither-scale value. using defaults!");
-                    config.dither_scale
-                } else {
-                    args[_i + 1].parse().unwrap_or(config.dither_scale)
-                };
-                _i += 1;
-            }
-            "-N" | "--no-scale" => {
-                if _i == args.len() - 1 {
-                    print_usage();
-                    return None;
-                };
-                config.original_size = true;
-                _i += 1
-            }
-            "--onechar" => {
-                if _i == args.len() - 1 {
-                    print_usage();
-                    return None;
-                };
-                config.onechar = args[_i + 1].chars().next().unwrap();
-                _i += 1
-            }
-            "--once" => {
-                if _i == args.len() - 1 {
-                    print_usage();
-                    return None;
-                };
-                config.once = true;
-                _i += 1
-            }
-            "-S" | "--style" => {
-                if _i == args.len() - 1 {
-                    print_usage();
-                    return None;
-                };
-                config.style = check_style_arg(&args[_i + 1]);
-                _i += 1
-            }
-            "--sleep" => {
-                if _i == args.len() - 1 {
-                    print_usage();
-                    return None;
-                };
-
-                config.sleep = args[_i + 1].parse().unwrap_or(config.sleep);
-                _i += 1
-            }
-            "-s" | "--scale" => {
-                if _i == args.len() - 1 {
-                    print_usage();
-                    return None;
-                };
-                let input = args[_i + 1].parse::<u32>();
-                config.scale = if input.is_err() || input.unwrap() < 1 {
-                    eprintln!("Error: invalid scale number using defaults!");
-                    config.scale
-                } else {
-                    args[_i + 1].parse().unwrap_or(config.scale)
-                };
-                _i += 1;
-            }
-            "--table" => {
-                // custom ascii table
-                if _i == args.len() - 1 {
-                    print_usage();
-                    return None;
-                };
-                config.table = args[_i + 1]
-                    .parse::<String>()
-                    .unwrap_or_else(|_| "".to_string())
-                    .split(',')
-                    .map(|token| token.trim().chars().next().unwrap_or(' '))
-                    .collect::<Vec<char>>();
-                _i += 1
-            }
-            "-v" | "--version" => {
-                // print program name and version and exit
-                println!("tai-v{}", VERSION);
-                return None;
-            }
+    if matches.opt_present("colored") {
+        config.colored = true;
+    }
+    if matches.opt_present("background") {
+        if !config.colored {
+            eprintln!(
+                "--colored is not enabled to use this option, for now i will enable it for you"
+            );
+            config.colored = true;
+        }
+        // 48==applying the color on the background of the char,
+        // 38(default)==applying the color on the foreground.
+        config.background = 48;
+    }
+    if matches.opt_present("d") {
+        config.dither = true;
+    }
+    if matches.opt_present("D") {
+        let dither_scale = matches.opt_get::<u8>("D").unwrap().unwrap();
+        if !config.dither {
+            eprintln!("image dithering is not enabled, for now i will enable it for you");
+            config.dither = true;
+        }
+        config.dither_scale = dither_scale;
+    }
+    if matches.opt_present("N") {
+        config.original_size = true;
+    }
+    if matches.opt_present("S") {
+        let style = matches.opt_str("S").unwrap();
+        config.style = check_style_arg(&style);
+    }
+    if matches.opt_present("onechar") {
+        let onechar = matches.opt_get::<char>("onechar").unwrap().unwrap();
+        match config.style {
+            Style::OneChar => {}
             _ => {
-                continue;
+                eprintln!("this option only works with onechar style (-S onechar), for now i will switch it for you");
+                config.style = Style::OneChar;
+            }
+        }
+        config.onechar = onechar;
+    }
+    if matches.opt_present("once") {
+        config.once = true;
+    }
+
+    if matches.opt_present("sleep") {
+        let sleep = matches.opt_get::<u64>("sleep").unwrap().unwrap();
+        config.sleep = sleep;
+    }
+    if matches.opt_present("scale") {
+        let scale = matches.opt_get::<u32>("scale").unwrap().unwrap();
+        config.scale = scale;
+    }
+    if matches.opt_present("table") {
+        let table = matches
+            .opt_str("table")
+            .unwrap()
+            .split(',')
+            .map(|token| token.trim().chars().next().unwrap_or(' '))
+            .collect::<Vec<char>>();
+        config.table = table;
+        match config.style {
+            Style::Ascii => {}
+            _ => {
+                eprintln!("--table option works only with ascii style(-S/--style ascii), for now i will enable it for you");
+                config.style = Style::Ascii
             }
         }
     }
-    //args loop ends here
-
-    if args[args.len() - 1].starts_with('-') {
-        return None;
+    if !matches.free.is_empty() {
+        config.image_file = matches.free[0].to_string();
     };
-
-    config.image_file = args.into_iter().last().unwrap();
 
     Some(config)
 }
@@ -155,9 +158,6 @@ fn check_style_arg(arg: &str) -> Style {
         "braille" => Style::Braille,
         "numbers" => Style::Numbers,
         "onechar" => Style::OneChar,
-        _ => {
-            eprintln!("Error: Unknown style. using defaults");
-            Style::default()
-        }
+        _ => Style::default(),
     }
 }
